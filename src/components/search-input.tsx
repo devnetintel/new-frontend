@@ -27,7 +27,9 @@ export function SearchInput({ className, onSearch, isThinking, ...props }: Searc
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault()
             if (value.trim()) {
+                // Trigger voice discovery overlay instead of direct search
                 onSearch(value)
+                setValue("") // Clear input after opening overlay
             }
         }
     }
@@ -59,7 +61,12 @@ export function SearchInput({ className, onSearch, isThinking, ...props }: Searc
                                 "h-8 w-8 rounded-full transition-all duration-200",
                                 value.trim() ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                             )}
-                            onClick={() => value.trim() && onSearch(value)}
+                            onClick={() => {
+                                if (value.trim()) {
+                                    onSearch(value)
+                                    setValue("") // Clear input after opening overlay
+                                }
+                            }}
                             disabled={!value.trim() || isThinking}
                         >
                             <ArrowRight className="h-4 w-4" />

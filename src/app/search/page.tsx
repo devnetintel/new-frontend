@@ -9,6 +9,7 @@ import { MOCK_DB, Profile } from "@/lib/mock-data"
 import { useHub } from "@/lib/hub-context"
 import { Users, Check, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { VoiceDiscoveryInline } from "@/components/voice-discovery-overlay"
 
 export default function SearchPage() {
     const [isThinking, setIsThinking] = useState(false)
@@ -22,6 +23,7 @@ export default function SearchPage() {
 
     const [isClarifying, setIsClarifying] = useState(false)
     const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([])
+    const [isVoiceDiscoveryOpen, setIsVoiceDiscoveryOpen] = useState(false)
 
     const thinkingMessages = [
         "Analyzing request...",
@@ -114,8 +116,8 @@ export default function SearchPage() {
 
     return (
         <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-6xl mx-auto">
-            {/* Header / Top Bar */}
-            {!hasSearched && (
+            {/* Header / Initial State - Hide when conversation is active */}
+            {!hasSearched && !isVoiceDiscoveryOpen && (
                 <div className="flex-1 flex flex-col items-center justify-center space-y-8 mb-20">
                     <h1 className="text-4xl md:text-5xl font-medium text-center tracking-tight text-foreground/90">
                         {getGreeting()}
@@ -191,8 +193,34 @@ export default function SearchPage() {
                         </div>
                     </div>
 
-                    <SearchInput onSearch={handleSearch} isThinking={isThinking} placeholder="Ask anything..." />
+                    <SearchInput
+                        onSearch={(query) => {
+                            // Open voice discovery with initial query
+                            setQuery(query)
+                            setIsVoiceDiscoveryOpen(true)
+                        }}
+                        isThinking={isThinking}
+                        placeholder="Ask anything..."
+                    />
                 </div>
+            )}
+
+            {/* Voice Discovery Inline Component */}
+            {isVoiceDiscoveryOpen && !hasSearched && (
+                <VoiceDiscoveryInline
+                    isActive={isVoiceDiscoveryOpen}
+                    onClose={() => {
+                        setIsVoiceDiscoveryOpen(false)
+                        setQuery("")
+                    }}
+                    onSearch={(finalQuery) => {
+                        setIsVoiceDiscoveryOpen(false)
+                        setQuery("")
+                        handleSearch(finalQuery)
+                    }}
+                    initialQuery={query}
+                    selectedNetworks={selectedHubs}
+                />
             )}
 
             {/* Search Results State */}
@@ -272,6 +300,7 @@ export default function SearchPage() {
                 onClose={() => setIsModalOpen(false)}
                 profile={selectedProfile}
             />
+
         </div>
     )
 }
