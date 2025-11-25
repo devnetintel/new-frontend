@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -11,23 +12,120 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { Profile } from "@/components/profile-card"
+import type { Connection } from "@/types"
+import { submitIntroRequest } from "@/services"
+import { toast } from "sonner"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 interface IntroRequestModalProps {
     isOpen: boolean
     onClose: () => void
-    profile: Profile | null
+    profile: Connection | null
+    workspaceId?: string // Workspace ID from selected workspace
+    workspaceName?: string // Optional workspace name for display
 }
 
-export function IntroRequestModal({ isOpen, onClose, profile }: IntroRequestModalProps) {
-    const [message, setMessage] = useState(
-        "Hi Shubham, I saw that you know Sarah Chen. I'm looking for advice on scaling engineering teams and would love to chat with her. Could you introduce us?"
-    )
+export function IntroRequestModal({
+    isOpen,
+    onClose,
+    profile,
+    workspaceId,
+    workspaceName,
+}: IntroRequestModalProps) {
+    const { getToken } = useAuth()
+    const [message, setMessage] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [submitStatus, setSubmitStatus] = useState<
+        "idle" | "success" | "error"
+    >("idle")
+    const [errorMessage, setErrorMessage] = useState("")
 
-    const handleSend = () => {
-        // Simulate sending request
-        console.log("Sending request:", message)
-        onClose()
+    // Initialize message when modal opens or profile changes
+    useEffect(() => {
+        if (isOpen && profile) {
+            // Use s1_message if available, otherwise use a default template
+            const defaultMessage = profile.s1_message || 
+                `Hi, I saw that you know ${profile.name}. ${profile.reason ? `Based on ${profile.reason.substring(0, 100)}... ` : ""}I'd love to connect with them. Could you introduce us?`
+            setMessage(defaultMessage)
+            setSubmitStatus("idle")
+            setErrorMessage("")
+        }
+    }, [isOpen, profile])
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (!profile) return
+
+        // Validate message
+        if (message.trim().length < 10) {
+            setSubmitStatus("error")
+            setErrorMessage(
+                "Please write at least 10 characters explaining why you want to connect."
+            )
+            return
+        }
+
+        // Check if workspace is selected
+        if (!workspaceId) {
+            setSubmitStatus("error")
+            setErrorMessage("Please select a workspace first.")
+            return
+        }
+
+        setIsSubmitting(true)
+        setSubmitStatus("idle")
+        setErrorMessage("")
+
+        try {
+            const token = await getToken()
+            if (!token) {
+                throw new Error("Please sign in")
+            }
+
+            const result = await submitIntroRequest(token, {
+                target_person_id: profile.id,
+                target_person_name: profile.name,
+                target_person_title: profile.title,
+                target_person_company: profile.company,
+                target_person_linkedin: profile.linkedin || null,
+                match_reason: profile.reason || "",
+                user_message: message.trim(),
+                workspace_id: workspaceId,
+                urgency: "medium", // Default urgency
+            })
+
+            if (result.success) {
+                setSubmitStatus("success")
+                toast.success("Introduction request sent successfully!")
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    onClose()
+                    setMessage("")
+                    setSubmitStatus("idle")
+                }, 2000)
+            } else {
+                setSubmitStatus("error")
+                setErrorMessage(
+                    result.message || "Failed to submit request. Please try again."
+                )
+            }
+        } catch (error) {
+            console.error("Error submitting intro request:", error)
+            setSubmitStatus("error")
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Network error. Please check your connection and try again."
+            )
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to submit request"
+            )
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     if (!profile) return null
@@ -38,22 +136,91 @@ export function IntroRequestModal({ isOpen, onClose, profile }: IntroRequestModa
                 <DialogHeader>
                     <DialogTitle>Request Intro to {profile.name}</DialogTitle>
                     <DialogDescription>
-                        Ask Shubham to introduce you. The message is pre-filled based on your search context.
+                        {workspaceName
+                            ? `Ask ${workspaceName} to introduce you. The message is pre-filled based on your search context.`
+                            : "Request an introduction. The message is pre-filled based on your search context."}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <Textarea
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className="h-32"
-                    />
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSend}>Send Request</Button>
-                </DialogFooter>
+
+                {/* Success State */}
+                {submitStatus === "success" && (
+                    <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h3 className="font-semibold text-green-900 dark:text-green-100">
+                                Request Sent!
+                            </h3>
+                            <p className="text-sm text-green-800 dark:text-green-200 mt-1">
+                                The network owner has been notified and will facilitate
+                                the introduction.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Error State */}
+                {submitStatus === "error" && (
+                    <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                            <h3 className="font-semibold text-red-900 dark:text-red-100">
+                                Failed to Send
+                            </h3>
+                            <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                                {errorMessage}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                <form onSubmit={handleSend}>
+                    <div className="grid gap-4 py-4">
+                        <div>
+                            <label
+                                htmlFor="message"
+                                className="block text-sm font-semibold mb-2"
+                            >
+                                Why do you want to connect?{" "}
+                                <span className="text-red-500">*</span>
+                            </label>
+                            <Textarea
+                                id="message"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                className="h-32"
+                                placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
+                                disabled={isSubmitting || submitStatus === "success"}
+                                required
+                            />
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Minimum 10 characters • {message.length} characters
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={
+                                isSubmitting ||
+                                submitStatus === "success" ||
+                                message.trim().length < 10
+                            }
+                        >
+                            {isSubmitting
+                                ? "Sending..."
+                                : submitStatus === "success"
+                                ? "Sent!"
+                                : "Send Request"}
+                        </Button>
+                    </DialogFooter>
+                </form>
             </DialogContent>
         </Dialog>
     )

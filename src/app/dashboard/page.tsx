@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search, Upload, Share2, Copy, Clock, CheckCircle2, XCircle, UserPlus, ChevronDown, Sparkles } from "lucide-react"
@@ -12,40 +14,116 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { fetchMyRequests, type IntroRequest } from "@/services"
+import { formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 
 type UserState = "new_spoke" | "active_hub"
 
 export default function Dashboard() {
+    const { isSignedIn, isLoaded, getToken } = useAuth()
+    const { user } = useUser()
+    const router = useRouter()
     // DEV ONLY: State Simulator
     const [userState, setUserState] = useState<UserState>("active_hub")
+    const [requests, setRequests] = useState<IntroRequest[]>([])
+    const [isLoadingRequests, setIsLoadingRequests] = useState(true)
 
-    // Mock Data for Requests
-    const requests = [
-        {
-            id: 1,
-            to: "Sarah Chen",
-            title: "VP of Engineering at TechFlow",
-            status: "pending",
-            date: "2 hours ago",
-            hub: "Shubham"
-        },
-        {
-            id: 2,
-            to: "Michael Ross",
-            title: "Founder at Stealth AI",
-            status: "approved",
-            date: "1 day ago",
-            hub: "Ajay"
-        },
-        {
-            id: 3,
-            to: "Jessica Wu",
-            title: "Product Lead at Stripe",
-            status: "connected",
-            date: "3 days ago",
-            hub: "Shubham"
+    useEffect(() => {
+        if (isLoaded) {
+            if (!isSignedIn) {
+                router.push("/sign-in")
+            }
         }
-    ]
+    }, [isLoaded, isSignedIn, router])
+
+    // Fetch requests from API
+    useEffect(() => {
+        const loadRequests = async () => {
+            if (!isSignedIn || !user?.id) {
+                setIsLoadingRequests(false)
+                return
+            }
+
+            try {
+                setIsLoadingRequests(true)
+                const token = await getToken()
+                if (!token) {
+                    setIsLoadingRequests(false)
+                    return
+                }
+
+                const data = await fetchMyRequests(token, {
+                    limit: 20,
+                    offset: 0,
+                })
+
+                setRequests(data.requests)
+            } catch (error) {
+                console.error("Failed to load requests:", error)
+                toast.error(
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to load requests"
+                )
+            } finally {
+                setIsLoadingRequests(false)
+            }
+        }
+
+        if (isLoaded && isSignedIn) {
+            loadRequests()
+        }
+    }, [isLoaded, isSignedIn, user?.id, getToken])
+
+    if (!isLoaded || !isSignedIn) {
+        return null
+    }
+
+    // Helper functions
+    const getTimeAgo = (timestamp: string | null) => {
+        if (!timestamp) return "Unknown"
+        try {
+            return formatDistanceToNow(new Date(timestamp), { addSuffix: true })
+        } catch {
+            return "Unknown"
+        }
+    }
+
+    const getStatusBadge = (request: IntroRequest) => {
+        const status = request.status.display
+
+        if (status === "Connected") {
+            return {
+                label: "Connected",
+                variant: "secondary" as const,
+                className: "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20",
+                icon: <UserPlus className="w-3 h-3 mr-1" />
+            }
+        } else if (status === "Awaiting Target") {
+            return {
+                label: "Approved",
+                variant: "secondary" as const,
+                className: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border-blue-500/20",
+                icon: <CheckCircle2 className="w-3 h-3 mr-1" />
+            }
+        } else if (status === "Declined") {
+            return {
+                label: "Declined",
+                variant: "secondary" as const,
+                className: "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20",
+                icon: <XCircle className="w-3 h-3 mr-1" />
+            }
+        } else {
+            // "Sent to Hub" or other pending states
+            return {
+                label: "Pending",
+                variant: "secondary" as const,
+                className: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border-yellow-500/20",
+                icon: <Clock className="w-3 h-3 mr-1" />
+            }
+        }
+    }
 
     return (
         <div className="container mx-auto p-6 space-y-10 max-w-6xl">
@@ -74,7 +152,7 @@ export default function Dashboard() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Link href="/search">
+                    <Link href="/">
                         <Button>
                             <Search className="mr-2 h-4 w-4" />
                             Search Network
@@ -190,45 +268,87 @@ export default function Dashboard() {
                     My Requests
                 </h2>
 
-                <div className="grid gap-4">
-                    {requests.map((req) => (
-                        <Card key={req.id} className="hover:bg-muted/20 transition-colors border-border/50">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                                        {req.to.split(' ').map(n => n[0]).join('')}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-medium">{req.to}</h3>
-                                        <p className="text-sm text-muted-foreground">{req.title}</p>
-                                        <p className="text-xs text-muted-foreground/70 mt-0.5">
-                                            via {req.hub}'s Network • {req.date}
-                                        </p>
-                                    </div>
-                                </div>
+                {isLoadingRequests ? (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {requests.length === 0 ? (
+                            <Card className="rounded-xl p-8 text-center border-border/50">
+                                <p className="text-muted-foreground">
+                                    You haven&apos;t made any introduction requests yet.
+                                </p>
+                            </Card>
+                        ) : (
+                            requests.map((request) => {
+                                const statusBadge = getStatusBadge(request)
+                                const timeAgo = getTimeAgo(request.timestamps.created_at)
+                                const titleCompany = [
+                                    request.target.title,
+                                    request.target.company,
+                                ]
+                                    .filter(Boolean)
+                                    .join(" at ")
 
-                                <div className="flex items-center gap-3">
-                                    {req.status === 'pending' && (
-                                        <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border-yellow-500/20">
-                                            <Clock className="w-3 h-3 mr-1" /> Pending
-                                        </Badge>
-                                    )}
-                                    {req.status === 'approved' && (
-                                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border-blue-500/20">
-                                            <CheckCircle2 className="w-3 h-3 mr-1" /> Approved
-                                        </Badge>
-                                    )}
-                                    {req.status === 'connected' && (
-                                        <Badge variant="secondary" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20">
-                                            <UserPlus className="w-3 h-3 mr-1" /> Connected
-                                        </Badge>
-                                    )}
-                                    <Button variant="ghost" size="sm">View</Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                                const initials = request.target.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .substring(0, 2)
+                                    .toUpperCase()
+
+                                return (
+                                    <Card
+                                        key={request.id}
+                                        className="hover:bg-muted/20 transition-colors border-border/50"
+                                    >
+                                        <CardContent className="p-4 flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                                                    {request.target.picture_url ? (
+                                                        <img
+                                                            src={request.target.picture_url}
+                                                            alt={request.target.name}
+                                                            className="h-10 w-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        initials
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-medium">
+                                                        {request.target.name}
+                                                    </h3>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {titleCompany || "Professional"}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground/70 mt-0.5">
+                                                        via {request.workspace.owner_name}&apos;s
+                                                        Network • {timeAgo}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-3">
+                                                <Badge
+                                                    variant={statusBadge.variant}
+                                                    className={statusBadge.className}
+                                                >
+                                                    {statusBadge.icon}
+                                                    {statusBadge.label}
+                                                </Badge>
+                                                <Button variant="ghost" size="sm">
+                                                    View
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )
+                            })
+                        )}
+                    </div>
+                )}
             </section>
         </div>
     )
