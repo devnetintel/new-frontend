@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -6,6 +9,7 @@ import { MapPin, Briefcase, UserPlus } from "lucide-react"
 import type { Connection } from "@/types"
 
 export function ProfileCard({ profile, onConnect }: { profile: Connection; onConnect: (id: string) => void }) {
+    const [isExpanded, setIsExpanded] = useState(false)
     const initials = profile.name
         .split(" ")
         .map((n) => n[0])
@@ -17,8 +21,8 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
     const workspaceName = profile.workspace_id || "Network"
 
     return (
-        <Card className="overflow-hidden border-transparent bg-card/50 shadow-none hover:shadow-md hover:border-border/50 transition-all duration-300 group">
-            <CardContent className="p-6">
+        <Card className="overflow-hidden border-transparent bg-card/50 shadow-none hover:shadow-md hover:border-border/50 transition-all duration-300 group flex flex-col h-full">
+            <CardContent className="p-6 flex-1 flex flex-col">
                 {profile.workspace_id && (
                     <div className="flex items-start justify-between mb-4">
                         <div className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -52,11 +56,16 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
                     </div>
                 </div>
 
+                <div className="flex-1" />
+
                 {profile.reason && (
                     <div className="mt-4 p-4 bg-muted/30 rounded-lg text-sm border border-border/50">
                         <p className="font-semibold text-foreground/80 mb-2 text-xs uppercase tracking-wide">Why this match</p>
                         <p className="text-muted-foreground leading-loose">
-                            {profile.reason.split(" ").map((word, i) => {
+                            {(isExpanded || profile.reason.length <= 100 
+                                ? profile.reason 
+                                : profile.reason.substring(0, 100) + "..."
+                            ).split(" ").map((word, i) => {
                                 // Simple heuristic for highlighting keywords (longer words or capitalized)
                                 const isKeyword = word.length > 5 || /^[A-Z]/.test(word);
                                 return isKeyword ? (
@@ -66,6 +75,14 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
                                 )
                             })}
                         </p>
+                        {profile.reason.length > 100 && (
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="mt-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                            >
+                                {isExpanded ? "Read Less" : "Read More..."}
+                            </button>
+                        )}
                     </div>
                 )}
             </CardContent>
