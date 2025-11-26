@@ -7,7 +7,7 @@
 export type { Connection, WorkspaceInfo } from "./connection";
 
 // Search API types
-export type { BackendPerson, BackendQueryResponse } from "./search";
+export type { BackendPerson, BackendQueryResponse, ChatResponse, AskRequest } from "./search";
 
 // Introduction Request types
 export type {

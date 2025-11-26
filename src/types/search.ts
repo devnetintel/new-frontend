@@ -3,6 +3,27 @@
  */
 
 /**
+ * Chat Response Interface
+ */
+export interface ChatResponse {
+  session_id: string;
+  is_complete: boolean;
+  question?: string;
+  refined_query?: string;
+  question_count: number;
+}
+
+/**
+ * Ask Request Interface
+ */
+export interface AskRequest {
+  question: string;
+  workspace_ids?: string[];
+  workspace_id?: string; // Deprecated, use workspace_ids
+  session_id?: string; // Optional session ID from /chat
+}
+
+/**
  * Backend Person Profile Interface
  */
 export interface BackendPerson {

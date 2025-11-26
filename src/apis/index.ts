@@ -6,6 +6,9 @@
 // Search APIs
 export * from "./search";
 
+// Chat APIs
+export * from "./chat";
+
 // Workspace APIs
 export * from "./workspaces";
 
@@ -24,6 +27,8 @@ export type {
   WorkspaceInfo,
   BackendPerson,
   BackendQueryResponse,
+  ChatResponse,
+  AskRequest,
   IntroRequest,
   SubmitIntroRequestPayload,
   SubmitIntroRequestResponse,

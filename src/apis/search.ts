@@ -43,6 +43,7 @@ import type { BackendPerson, BackendQueryResponse } from "@/types";
  * @param query - Natural language query (e.g., "find Python developers")
  * @param token - JWT authentication token from Clerk
  * @param workspaceIds - Array of workspace identifiers for multi-workspace search
+ * @param sessionId - Optional session ID from /chat endpoint to link chat conversation with search
  * @returns Query response with results and metadata
  *
  * @example
@@ -52,14 +53,16 @@ import type { BackendPerson, BackendQueryResponse } from "@/types";
  * const result = await searchNetwork(
  *   "Python developers in fintech",
  *   token,
- *   ["shubham", "ajay"]
+ *   ["shubham", "ajay"],
+ *   "session-id-from-chat"
  * );
  * ```
  */
 export async function searchNetwork(
   query: string,
   token: string | null,
-  workspaceIds: string[]
+  workspaceIds: string[],
+  sessionId?: string
 ): Promise<BackendQueryResponse> {
   // Wake up server on first request (for Render free tier)
   if (!serverAwake) {
@@ -68,14 +71,22 @@ export async function searchNetwork(
   }
 
   console.log("Sending search request to:", `${API_BASE}/ask`);
-  console.log("Request info:", { hasToken: !!token, workspaceIds });
-  console.log(
-    "Request body:",
-    JSON.stringify({
-      question: query,
-      workspace_ids: workspaceIds,
-    })
-  );
+  console.log("Request info:", { hasToken: !!token, workspaceIds, sessionId });
+  
+  const requestBody: {
+    question: string;
+    workspace_ids: string[];
+    session_id?: string;
+  } = {
+    question: query,
+    workspace_ids: workspaceIds,
+  };
+
+  if (sessionId) {
+    requestBody.session_id = sessionId;
+  }
+
+  console.log("Request body:", JSON.stringify(requestBody));
 
   if (!token) {
     throw new Error("Authentication required. Please sign in.");
@@ -87,10 +98,7 @@ export async function searchNetwork(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`, // JWT authentication
     },
-    body: JSON.stringify({
-      question: query,
-      workspace_ids: workspaceIds, // Multi-workspace support
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   console.log("Response status:", response.status);

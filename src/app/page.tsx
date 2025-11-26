@@ -213,7 +213,7 @@ function HomePageContent() {
     "Curating introductions...",
   ];
 
-  const handleSearch = async (searchQuery: string) => {
+  const handleSearch = async (searchQuery: string, sessionId?: string) => {
     setQuery(searchQuery);
     setIsThinking(true);
     setHasSearched(true);
@@ -244,11 +244,12 @@ function HomePageContent() {
         await new Promise((resolve) => setTimeout(resolve, stepDuration));
       }
 
-      // Call backend API
+      // Call backend API with session_id if available
       const result = await searchNetwork(
         searchQuery,
         token,
-        selectedWorkspaceIds
+        selectedWorkspaceIds,
+        sessionId
       );
 
       // Check if clarification is needed
@@ -450,10 +451,10 @@ function HomePageContent() {
             setIsVoiceDiscoveryOpen(false);
             setQuery("");
           }}
-          onSearch={(finalQuery) => {
+          onSearch={(finalQuery, sessionId) => {
             setIsVoiceDiscoveryOpen(false);
             setQuery("");
-            handleSearch(finalQuery);
+            handleSearch(finalQuery, sessionId);
           }}
           initialQuery={query}
           selectedNetworks={selectedWorkspaceIds}
