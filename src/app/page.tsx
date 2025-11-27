@@ -487,6 +487,7 @@ function HomePageContent() {
           }}
           initialQuery={query}
           selectedNetworks={selectedWorkspaceIds}
+          workspaces={workspaces}
         />
       )}
 

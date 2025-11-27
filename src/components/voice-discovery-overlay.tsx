@@ -32,6 +32,7 @@ interface VoiceDiscoveryInlineProps {
   onSearch: (finalQuery: string, sessionId?: string) => void;
   initialQuery?: string;
   selectedNetworks?: string[];
+  workspaces?: Array<{ id: string; name: string }>;
 }
 
 export function VoiceDiscoveryInline({
@@ -40,6 +41,7 @@ export function VoiceDiscoveryInline({
   onSearch,
   initialQuery,
   selectedNetworks = [],
+  workspaces = [],
 }: VoiceDiscoveryInlineProps) {
   const { getToken } = useAuth();
   const [isListening, setIsListening] = useState(false);
@@ -312,10 +314,52 @@ export function VoiceDiscoveryInline({
 
   if (!isActive) return null;
 
-  const networkNames: Record<string, string> = {
-    shubham: "Shubham's Network",
-    ajay: "Ajay's Network",
-  };
+    // Color classes matching the network selector
+  const colorClasses = [
+    {
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      text: "text-blue-400",
+    },
+    {
+      bg: "bg-green-500/10",
+      border: "border-green-500/30",
+      text: "text-green-400",
+    },
+    {
+      bg: "bg-purple-500/10",
+      border: "border-purple-500/30",
+      text: "text-purple-400",
+    },
+    {
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/30",
+      text: "text-orange-400",
+    },
+    {
+      bg: "bg-pink-500/10",
+      border: "border-pink-500/30",
+      text: "text-pink-400",
+    },
+  ];
+
+  // Get selected workspaces with their names and colors
+  const selectedWorkspaces = selectedNetworks
+    .map((networkId) => {
+      const workspace = workspaces.find((w) => w.id === networkId);
+      if (!workspace) return null;
+      
+      // Find the index of this workspace in the full workspaces array to get consistent color
+      const workspaceIndex = workspaces.findIndex((w) => w.id === networkId);
+      const color = colorClasses[workspaceIndex % colorClasses.length];
+      
+      return {
+        id: networkId,
+        name: workspace.name,
+        color,
+      };
+    })
+    .filter((w): w is NonNullable<typeof w> => w !== null);
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-top-4 duration-500">
@@ -327,18 +371,18 @@ export function VoiceDiscoveryInline({
             <span className="text-xs text-muted-foreground font-medium">
               Searching:
             </span>
-            {selectedNetworks.length > 0 ? (
-              selectedNetworks.map((network) => (
+            {selectedWorkspaces.length > 0 ? (
+              selectedWorkspaces.map((workspace) => (
                 <div
-                  key={network}
+                  key={workspace.id}
                   className={cn(
                     "px-3 py-1 rounded-full text-xs font-medium border",
-                    network === "shubham"
-                      ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
-                      : "bg-green-500/10 border-green-500/30 text-green-400"
+                    workspace.color.bg,
+                    workspace.color.border,
+                    workspace.color.text
                   )}
                 >
-                  {networkNames[network]}
+                  {workspace.name}&apos;s Network
                 </div>
               ))
             ) : (
