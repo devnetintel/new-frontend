@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useAuth } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,6 +39,40 @@ export function IntroRequestModal({
         "idle" | "success" | "error"
     >("idle")
     const [errorMessage, setErrorMessage] = useState("")
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+    // Manual smooth scroll function - always scrolls when input is focused/clicked
+    const scrollIntoViewSmooth = useCallback((element: HTMLElement | null) => {
+        if (!element || typeof window === 'undefined') return;
+        
+        const performScroll = () => {
+            try {
+                // Check if element still exists and is in DOM
+                if (!element || !document.body || !document.body.contains(element)) {
+                    return;
+                }
+                
+                // Use native scrollIntoView for reliability
+                if (element.scrollIntoView) {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+            } catch (error) {
+                // Silently fail if scroll fails
+                console.debug('Scroll failed:', error);
+            }
+        };
+        
+        // Use double RAF and setTimeout to ensure it runs after browser's default behavior
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                setTimeout(performScroll, 50);
+            });
+        });
+    }, [])
 
     // Initialize message when modal opens or profile changes
     useEffect(() => {
@@ -184,10 +218,28 @@ export function IntroRequestModal({
                                 <span className="text-red-500">*</span>
                             </label>
                             <Textarea
+                                ref={textareaRef}
                                 id="message"
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
+                                onFocus={(e) => {
+                                    if (textareaRef.current) {
+                                        scrollIntoViewSmooth(textareaRef.current);
+                                    }
+                                }}
+                                onClick={(e) => {
+                                    if (textareaRef.current) {
+                                        scrollIntoViewSmooth(textareaRef.current);
+                                    }
+                                }}
+                                onMouseDown={(e) => {
+                                    // Trigger scroll on mousedown as well
+                                    if (textareaRef.current) {
+                                        scrollIntoViewSmooth(textareaRef.current);
+                                    }
+                                }}
                                 className="h-24 sm:h-32 text-sm"
+                                style={{ scrollMargin: '20px' }}
                                 placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
                                 disabled={isSubmitting || submitStatus === "success"}
                                 required

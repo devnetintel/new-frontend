@@ -271,6 +271,16 @@
         scroll-margin: 20px;
     }
 
+    /* Fix dialog flicker */
+    [role="dialog"] {
+        will-change: transform, opacity;
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+    }
+
     /* Delay focus ring to prevent flicker when no scroll happens */
     /* Target containers with focus-within that have ring transitions */
     [class*="focus-within:ring"] {

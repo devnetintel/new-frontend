@@ -25,21 +25,34 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
     const containerRef = React.useRef<HTMLDivElement>(null)
 
     // Manual smooth scroll function - always scrolls when input is focused/clicked
-    const scrollIntoViewSmooth = React.useCallback((element: HTMLElement) => {
-        // Use requestAnimationFrame to ensure DOM is ready
+    const scrollIntoViewSmooth = React.useCallback((element: HTMLElement | null) => {
+        if (!element || typeof window === 'undefined') return;
+        
+        const performScroll = () => {
+            try {
+                // Check if element still exists and is in DOM
+                if (!element || !document.body || !document.body.contains(element)) {
+                    return;
+                }
+                
+                // Use native scrollIntoView for reliability
+                if (element.scrollIntoView) {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+            } catch (error) {
+                // Silently fail if scroll fails
+                console.debug('Scroll failed:', error);
+            }
+        };
+        
+        // Use double RAF and setTimeout to ensure it runs after browser's default behavior
         requestAnimationFrame(() => {
-            const rect = element.getBoundingClientRect();
-            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-            
-            // Always scroll to center the element
-            const elementTop = rect.top + window.pageYOffset;
-            const elementHeight = rect.height;
-            const targetScroll = elementTop - (viewportHeight / 2) + (elementHeight / 2);
-            
-            // Smooth scroll to center the element
-            window.scrollTo({
-                top: Math.max(0, targetScroll),
-                behavior: 'smooth'
+            requestAnimationFrame(() => {
+                setTimeout(performScroll, 50);
             });
         });
     }, [])
@@ -194,14 +207,23 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
                     onKeyDown={handleKeyDown}
                     onFocus={(e) => {
                         // Always scroll when input is focused
-                        const element = e.currentTarget;
-                        scrollIntoViewSmooth(element);
+                        if (textareaRef.current) {
+                            scrollIntoViewSmooth(textareaRef.current);
+                        }
                         props.onFocus?.(e);
                     }}
                     onClick={(e) => {
                         // Always scroll when clicking on textarea
-                        scrollIntoViewSmooth(e.currentTarget);
+                        if (textareaRef.current) {
+                            scrollIntoViewSmooth(textareaRef.current);
+                        }
                         props.onClick?.(e);
+                    }}
+                    onMouseDown={(e) => {
+                        // Trigger scroll on mousedown as well
+                        if (textareaRef.current) {
+                            scrollIntoViewSmooth(textareaRef.current);
+                        }
                     }}
                     placeholder="Ask anything..."
                     className="w-full min-h-[60px] max-h-[200px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-lg placeholder:text-muted-foreground/70"
