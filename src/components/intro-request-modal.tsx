@@ -132,10 +132,10 @@ export function IntroRequestModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                    <DialogTitle>Request Intro to {profile.name}</DialogTitle>
-                    <DialogDescription>
+            <DialogContent className="max-w-[90vw] sm:max-w-[500px] p-4 sm:p-6 rounded-xl">
+                <DialogHeader className="pb-2 sm:pb-4">
+                    <DialogTitle className="text-lg sm:text-xl">Request Intro to {profile.name}</DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm">
                         {workspaceName
                             ? `Ask ${workspaceName} to introduce you. The message is pre-filled based on your search context.`
                             : "Request an introduction. The message is pre-filled based on your search context."}
@@ -144,13 +144,13 @@ export function IntroRequestModal({
 
                 {/* Success State */}
                 {submitStatus === "success" && (
-                    <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                    <div className="rounded-lg sm:rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+                        <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
                         <div>
-                            <h3 className="font-semibold text-green-900 dark:text-green-100">
+                            <h3 className="font-semibold text-sm sm:text-base text-green-900 dark:text-green-100">
                                 Request Sent!
                             </h3>
-                            <p className="text-sm text-green-800 dark:text-green-200 mt-1">
+                            <p className="text-xs sm:text-sm text-green-800 dark:text-green-200 mt-1">
                                 The network owner has been notified and will facilitate
                                 the introduction.
                             </p>
@@ -160,13 +160,13 @@ export function IntroRequestModal({
 
                 {/* Error State */}
                 {submitStatus === "error" && (
-                    <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                    <div className="rounded-lg sm:rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
                         <div>
-                            <h3 className="font-semibold text-red-900 dark:text-red-100">
+                            <h3 className="font-semibold text-sm sm:text-base text-red-900 dark:text-red-100">
                                 Failed to Send
                             </h3>
-                            <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                            <p className="text-xs sm:text-sm text-red-800 dark:text-red-200 mt-1">
                                 {errorMessage}
                             </p>
                         </div>
@@ -174,11 +174,11 @@ export function IntroRequestModal({
                 )}
 
                 <form onSubmit={handleSend}>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
                         <div>
                             <label
                                 htmlFor="message"
-                                className="block text-sm font-semibold mb-2"
+                                className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2"
                             >
                                 Why do you want to connect?{" "}
                                 <span className="text-red-500">*</span>
@@ -187,24 +187,17 @@ export function IntroRequestModal({
                                 id="message"
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                className="h-32"
+                                className="h-24 sm:h-32 text-sm"
                                 placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
                                 disabled={isSubmitting || submitStatus === "success"}
                                 required
                             />
-                            <p className="text-xs text-muted-foreground mt-2">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">
                                 Minimum 10 characters • {message.length} characters
                             </p>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={onClose}
-                            disabled={isSubmitting}
-                        >
-                            Cancel
-                        </Button>
+                    <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                         <Button
                             type="submit"
                             disabled={
@@ -212,12 +205,21 @@ export function IntroRequestModal({
                                 submitStatus === "success" ||
                                 message.trim().length < 10
                             }
+                            className="w-full sm:w-auto text-sm sm:text-base"
                         >
                             {isSubmitting
                                 ? "Sending..."
                                 : submitStatus === "success"
                                 ? "Sent!"
                                 : "Send Request"}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                            className="w-full sm:w-auto text-sm sm:text-base"
+                        >
+                            Cancel
                         </Button>
                     </DialogFooter>
                 </form>

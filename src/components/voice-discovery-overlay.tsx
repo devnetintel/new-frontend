@@ -363,9 +363,9 @@ export function VoiceDiscoveryInline({
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-top-4 duration-500">
-      {/* Header with Cancel and Network Pills */}
+      {/* Header with Network Pills */}
       <div className="w-full max-w-4xl mx-auto mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           {/* Selected Networks Pills */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-medium">
@@ -391,19 +391,20 @@ export function VoiceDiscoveryInline({
               </span>
             )}
           </div>
-
-          {/* Cancel Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-            Cancel
-          </Button>
         </div>
       </div>
+
+      {/* Cancel Button - Fixed positioned */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onClose}
+        className="fixed top-4 right-20 z-40 rounded-full bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 text-muted-foreground hover:text-foreground gap-2"
+      >
+        <X className="h-4 w-4" />
+        <span className="hidden sm:inline">Cancel</span>
+        <span className="sr-only">Cancel</span>
+      </Button>
 
       {/* Persistent Query Evolution Display */}
       {refinedQuery && conversationStep < 3 && (

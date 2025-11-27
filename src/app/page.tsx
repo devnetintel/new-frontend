@@ -366,7 +366,7 @@ function HomePageContent() {
                 Loading networks...
               </div>
             ) : (
-              <div className="flex gap-3 mb-6 flex-wrap">
+              <div className="flex gap-2 md:gap-3 mb-6 flex-wrap">
                 {workspaces.map((workspace, index) => {
                   const isSelected = selectedWorkspaceIds.includes(
                     workspace.id
@@ -410,16 +410,16 @@ function HomePageContent() {
                       key={workspace.id}
                       onClick={() => toggleWorkspace(workspace.id)}
                       className={cn(
-                        "flex-1 min-w-[200px] p-4 rounded-xl border text-left transition-all duration-200",
+                        "flex-1 min-w-[140px] md:min-w-[200px] p-2 md:p-4 rounded-lg md:rounded-xl border text-left transition-all duration-200",
                         isSelected
                           ? `${color.bg} ${color.border} shadow-[0_0_15px_rgba(59,130,246,0.15)]`
                           : "bg-card border-border/50 hover:border-border hover:bg-muted/50 opacity-60"
                       )}
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-0.5 md:mb-1">
                         <span
                           className={cn(
-                            "font-semibold",
+                            "text-sm md:text-base font-semibold truncate",
                             isSelected ? color.text : "text-muted-foreground"
                           )}
                         >
@@ -428,35 +428,20 @@ function HomePageContent() {
                         {isSelected && (
                           <div
                             className={cn(
-                              "h-4 w-4 rounded-full flex items-center justify-center",
+                              "h-3 w-3 md:h-4 md:w-4 rounded-full flex items-center justify-center shrink-0 ml-1",
                               color.dot
                             )}
                           >
-                            <Check className="h-3 w-3 text-white" />
+                            <Check className="h-2 w-2 md:h-3 md:w-3 text-white" />
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] md:text-xs text-muted-foreground">
                         {workspace.profile_count} connections
                       </p>
                     </button>
                   );
                 })}
-
-                {/* Add Network Button */}
-                <button className="flex-1 min-w-[200px] p-4 rounded-xl border border-dashed border-border hover:border-primary/50 hover:bg-primary/5 text-left transition-all duration-200 group">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-muted-foreground group-hover:text-primary transition-colors">
-                      Your Network
-                    </span>
-                    <div className="h-4 w-4 rounded-full border border-dashed border-muted-foreground/50 flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10">
-                      <Plus className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground/70 group-hover:text-primary/70">
-                    Add to search...
-                  </p>
-                </button>
               </div>
             )}
           </div>

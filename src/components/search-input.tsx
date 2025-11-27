@@ -22,6 +22,27 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
     const mediaRecorderRef = React.useRef<MediaRecorder | null>(null)
     const audioChunksRef = React.useRef<Blob[]>([])
     const streamRef = React.useRef<MediaStream | null>(null)
+    const containerRef = React.useRef<HTMLDivElement>(null)
+
+    // Manual smooth scroll function - always scrolls when input is focused/clicked
+    const scrollIntoViewSmooth = React.useCallback((element: HTMLElement) => {
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+            const rect = element.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            
+            // Always scroll to center the element
+            const elementTop = rect.top + window.pageYOffset;
+            const elementHeight = rect.height;
+            const targetScroll = elementTop - (viewportHeight / 2) + (elementHeight / 2);
+            
+            // Smooth scroll to center the element
+            window.scrollTo({
+                top: Math.max(0, targetScroll),
+                behavior: 'smooth'
+            });
+        });
+    }, [])
 
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setValue(e.target.value)
@@ -149,14 +170,42 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
 
     return (
         <div className={cn("relative w-full max-w-3xl mx-auto group", className)}>
-            <div className="relative flex flex-col w-full p-4 bg-card border border-border/50 rounded-xl shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50">
+            <div 
+                ref={containerRef}
+                id="search-input-container"
+                className="relative flex flex-col w-full p-4 bg-card border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
+                style={{ 
+                    willChange: 'border-color, box-shadow',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    scrollMargin: '20px'
+                }}
+                onClick={(e) => {
+                    // Focus textarea when clicking on container
+                    if (textareaRef.current && e.target !== textareaRef.current) {
+                        textareaRef.current.focus();
+                    }
+                }}
+            >
                 <textarea
                     ref={textareaRef}
                     value={value}
                     onChange={handleInput}
                     onKeyDown={handleKeyDown}
+                    onFocus={(e) => {
+                        // Always scroll when input is focused
+                        const element = e.currentTarget;
+                        scrollIntoViewSmooth(element);
+                        props.onFocus?.(e);
+                    }}
+                    onClick={(e) => {
+                        // Always scroll when clicking on textarea
+                        scrollIntoViewSmooth(e.currentTarget);
+                        props.onClick?.(e);
+                    }}
                     placeholder="Ask anything..."
                     className="w-full min-h-[60px] max-h-[200px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-lg placeholder:text-muted-foreground/70"
+                    style={{ scrollMargin: '20px' }}
                     rows={1}
                     {...props}
                 />
