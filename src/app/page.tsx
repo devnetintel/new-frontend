@@ -6,7 +6,8 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { SearchInput } from "@/components/search-input";
 import { ProfileCard } from "@/components/profile-card";
 import { IntroRequestModal } from "@/components/intro-request-modal";
-import { Users, Check, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Check, Plus, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VoiceDiscoveryInline } from "@/components/voice-discovery-overlay";
 import {
@@ -43,6 +44,7 @@ function HomePageContent() {
   const [isClarifying, setIsClarifying] = useState(false);
   const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([]);
   const [isVoiceDiscoveryOpen, setIsVoiceDiscoveryOpen] = useState(false);
+  const [originalQuery, setOriginalQuery] = useState<string>("");
 
   // CRITICAL: Capture workspace referral from URL BEFORE Clerk redirects
   // This runs immediately on page load to preserve workspace through auth flow
@@ -220,6 +222,7 @@ function HomePageContent() {
     setResults([]);
     setThinkingStep(0);
     setIsClarifying(false);
+    setOriginalQuery("");
 
     try {
       const token = await getToken();
@@ -269,6 +272,11 @@ function HomePageContent() {
       const connections = transformPersonsToConnections(result.profiles, 2);
       setResults(connections);
 
+      // Store original query from API
+      if (result.metadata?.filters?.original_query) {
+        setOriginalQuery(result.metadata.filters.original_query);
+      }
+
       if (connections.length === 0) {
         toast.info("No matches found. Try different keywords.");
       } else {
@@ -315,8 +323,29 @@ function HomePageContent() {
     return `Hi ${firstName}, how can we help you?`;
   };
 
+  const handleBackToHome = () => {
+    setHasSearched(false);
+    setResults([]);
+    setQuery("");
+    setOriginalQuery("");
+    setIsClarifying(false);
+    setIsVoiceDiscoveryOpen(false);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-9xl mx-auto">
+      {/* Back to Home Button - Only show when search results are displayed */}
+      {hasSearched && (
+        <Button
+          onClick={handleBackToHome}
+          variant="outline"
+          size="sm"
+          className="fixed top-4 right-20 z-50 rounded-full bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 flex items-center gap-2"
+        >
+          <Home className="h-4 w-4" />
+          <span className="hidden sm:inline">Home</span>
+        </Button>
+      )}
       {/* Header / Initial State - Hide when conversation is active */}
       {!hasSearched && !isVoiceDiscoveryOpen && (
         <div className="flex-1 flex flex-col items-center justify-center space-y-8 mb-20">
@@ -466,14 +495,14 @@ function HomePageContent() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Sticky Search Bar for Follow-up */}
           <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 border-b border-border/10">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-9xl mx-auto">
               <p className="text-2xl font-medium mb-4 text-foreground/80">
                 {query}
               </p>
             </div>
           </div>
 
-          <div className="max-w-6xl mx-auto space-y-8">
+          <div className="max-w-8xl mx-auto space-y-8">
             {isThinking ? (
               <div className="flex flex-col items-center justify-center py-20 space-y-6">
                 <div className="relative">
@@ -517,6 +546,16 @@ function HomePageContent() {
               </div>
             ) : (
               <div className="space-y-6">
+                {originalQuery && (
+                  <div className="mb-4 p-4 bg-muted/30 rounded-xl border border-border/50">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Original Query
+                    </p>
+                    <p className="text-base font-medium text-foreground">
+                      {originalQuery}
+                    </p>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <span className="text-sm font-medium uppercase tracking-wider">
                     Sources

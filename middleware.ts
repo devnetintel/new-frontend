@@ -6,6 +6,9 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/webhooks(.*)",
+  "/approve(.*)",
+  "/consent(.*)",
+  "/status(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
@@ -21,6 +24,9 @@ export default clerkMiddleware(async (auth, request) => {
     "/dashboard",
     "/join",
     "/admin",
+    "/approve",
+    "/consent",
+    "/status",
   ];
 
   const isWorkspaceRoute =

@@ -6,8 +6,9 @@ import { Sidebar } from "./sidebar";
 export function SidebarWrapper() {
   const pathname = usePathname();
   const isAuthPage = pathname?.startsWith("/sign-in") || pathname?.startsWith("/sign-up");
+  const isPublicRoute = pathname?.startsWith("/approve/") || pathname?.startsWith("/consent/") || pathname?.startsWith("/status/");
 
-  if (isAuthPage) {
+  if (isAuthPage || isPublicRoute) {
     return null;
   }
 

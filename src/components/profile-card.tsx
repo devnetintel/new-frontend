@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { MapPin, Briefcase, UserPlus } from "lucide-react"
+import { MapPin, Briefcase, UserPlus, Linkedin } from "lucide-react"
 import type { Connection } from "@/types"
 
 export function ProfileCard({ profile, onConnect }: { profile: Connection; onConnect: (id: string) => void }) {
@@ -22,7 +22,7 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
 
     return (
         <Card className="overflow-hidden border-transparent bg-card/50 shadow-none hover:shadow-md hover:border-border/50 transition-all duration-300 group flex flex-col h-full">
-            <CardContent className="p-6 flex-1 flex flex-col">
+            <CardContent className="p-10 flex-1 flex flex-col">
                 {profile.workspace_id && (
                     <div className="flex items-start justify-between mb-4">
                         <div className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -33,15 +33,28 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
                 )}
 
                 <div className="flex items-start justify-between">
-                    <div className="flex gap-4">
-                        <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
+                    <div className="flex gap-4 flex-1">
+                        <Avatar className="h-20 w-20 border-2 border-background shadow-sm">
                             <AvatarImage src={profile.image || profile.picture_url} alt={profile.name} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl">
                                 {initials}
                             </AvatarFallback>
                         </Avatar>
-                        <div>
-                            <h3 className="font-bold text-lg">{profile.name}</h3>
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                                <h3 className="font-bold text-xl">{profile.name}</h3>
+                                {profile.linkedin && (
+                                    <a
+                                        href={profile.linkedin}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-shrink-0 p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                                        aria-label={`View ${profile.name}'s LinkedIn profile`}
+                                    >
+                                        <Linkedin className="h-5 w-5" />
+                                    </a>
+                                )}
+                            </div>
                             <div className="flex items-center text-sm text-muted-foreground mt-1">
                                 <Briefcase className="mr-1 h-3 w-3" />
                                 {profile.title} {profile.company ? `at ${profile.company}` : ""}
@@ -59,12 +72,12 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
                 <div className="flex-1" />
 
                 {profile.reason && (
-                    <div className="mt-4 p-4 bg-muted/30 rounded-lg text-sm border border-border/50">
+                    <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-border/50">
                         <p className="font-semibold text-foreground/80 mb-2 text-xs uppercase tracking-wide">Why this match</p>
-                        <p className="text-muted-foreground leading-loose">
-                            {(isExpanded || profile.reason.length <= 100 
+                        <p className="text-base text-muted-foreground leading-loose">
+                            {(isExpanded || profile.reason.length <= 200 
                                 ? profile.reason 
-                                : profile.reason.substring(0, 100) + "..."
+                                : profile.reason.substring(0, 200) + "..."
                             ).split(" ").map((word, i) => {
                                 // Simple heuristic for highlighting keywords (longer words or capitalized)
                                 const isKeyword = word.length > 5 || /^[A-Z]/.test(word);
@@ -75,7 +88,7 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
                                 )
                             })}
                         </p>
-                        {profile.reason.length > 100 && (
+                        {profile.reason.length > 200 && (
                             <button
                                 onClick={() => setIsExpanded(!isExpanded)}
                                 className="mt-2 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
@@ -86,7 +99,7 @@ export function ProfileCard({ profile, onConnect }: { profile: Connection; onCon
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="bg-muted/20 p-4 flex justify-end">
+            <CardFooter className="bg-muted/20 p-6 flex justify-end">
                 <Button size="sm" onClick={() => onConnect(profile.id)}>
                     <UserPlus className="mr-2 h-4 w-4" />
                     Request Intro
