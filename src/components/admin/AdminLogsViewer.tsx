@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { RefreshCw, Search, Filter } from "lucide-react";
 import { fetchAdminLogs, type AdminLog } from "@/services";
+import { cn } from "@/lib/utils";
 
 export const AdminLogsViewer: React.FC = () => {
   const { getToken } = useAuth();
@@ -23,7 +24,11 @@ export const AdminLogsViewer: React.FC = () => {
       if (!token) {
         throw new Error("No authentication token");
       }
-      const fetchedLogs = await fetchAdminLogs(token, limit, searchEmail || undefined);
+      const fetchedLogs = await fetchAdminLogs(
+        token,
+        limit,
+        searchEmail || undefined
+      );
       setLogs(fetchedLogs);
     } catch (err) {
       console.error("Error loading logs:", err);
@@ -93,11 +98,11 @@ export const AdminLogsViewer: React.FC = () => {
     return (
       <div
         onClick={() => toggleCell(cellId)}
-        style={{ cursor: "pointer", userSelect: "none" }}
+        className="cursor-pointer select-none"
         title="Click to expand/collapse"
       >
         {isExpanded ? stringContent : truncated}
-        <span style={{ marginLeft: "4px", color: "#667eea", fontSize: "10px" }}>
+        <span className="ml-1 text-[10px] text-[#667eea]">
           {isExpanded ? "▲" : "▼"}
         </span>
       </div>
@@ -105,45 +110,20 @@ export const AdminLogsViewer: React.FC = () => {
   };
 
   const successful = logs.filter((l) => (l.final_result_count || 0) > 0).length;
-  const noResults = logs.filter((l) => (l.final_result_count || 0) === 0).length;
+  const noResults = logs.filter(
+    (l) => (l.final_result_count || 0) === 0
+  ).length;
 
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#f9fafb",
-      }}
-    >
+    <div className="h-full flex flex-col bg-gray-50 light">
       {/* Header */}
-      <div
-        style={{
-          backgroundColor: "white",
-          borderBottom: "1px solid #e5e7eb",
-          padding: "20px 30px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "15px",
-          }}
-        >
+      <div className="bg-white border-b border-gray-200 px-8 py-5">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <h2
-              style={{
-                fontSize: "24px",
-                fontWeight: "600",
-                margin: 0,
-                color: "#111",
-              }}
-            >
+            <h2 className="text-2xl font-semibold m-0 text-gray-900">
               Search Logs
             </h2>
-            <p style={{ fontSize: "14px", color: "#666", marginTop: "4px" }}>
+            <p className="text-sm text-gray-600 mt-1">
               Real-time monitoring • Auto-refresh: 1min • Showing latest{" "}
               {logs.length} searches
             </p>
@@ -151,120 +131,62 @@ export const AdminLogsViewer: React.FC = () => {
           <button
             onClick={loadLogs}
             disabled={isLoading}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "8px 16px",
-              backgroundColor: "#667eea",
-              border: "none",
-              borderRadius: "8px",
-              color: "white",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              fontSize: "14px",
-              fontWeight: "500",
-              opacity: isLoading ? 0.6 : 1,
-            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 bg-[#667eea] border-none rounded-lg text-white text-sm font-medium transition-opacity",
+              isLoading
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer opacity-100"
+            )}
           >
-            <RefreshCw
-              size={16}
-              style={{ animation: isLoading ? "spin 1s linear infinite" : "none" }}
-            />
+            <RefreshCw size={16} className={cn(isLoading && "animate-spin")} />
             Refresh
           </button>
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", gap: "20px", marginBottom: "15px" }}>
-          <div
-            style={{
-              padding: "12px 20px",
-              backgroundColor: "#f3f4f6",
-              borderRadius: "8px",
-            }}
-          >
-            <div style={{ fontSize: "24px", fontWeight: "bold", color: "#111" }}>
+        <div className="flex gap-5 mb-4">
+          <div className="px-5 py-3 bg-gray-100 rounded-lg">
+            <div className="text-2xl font-bold text-gray-900">
               {logs.length}
             </div>
-            <div style={{ fontSize: "12px", color: "#666" }}>Total Logs</div>
+            <div className="text-xs text-gray-600">Total Logs</div>
           </div>
-          <div
-            style={{
-              padding: "12px 20px",
-              backgroundColor: "#d4edda",
-              borderRadius: "8px",
-            }}
-          >
-            <div
-              style={{ fontSize: "24px", fontWeight: "bold", color: "#155724" }}
-            >
+          <div className="px-5 py-3 bg-green-100 rounded-lg">
+            <div className="text-2xl font-bold text-green-800">
               {successful}
             </div>
-            <div style={{ fontSize: "12px", color: "#155724" }}>Successful</div>
+            <div className="text-xs text-green-800">Successful</div>
           </div>
-          <div
-            style={{
-              padding: "12px 20px",
-              backgroundColor: "#fff3cd",
-              borderRadius: "8px",
-            }}
-          >
-            <div
-              style={{ fontSize: "24px", fontWeight: "bold", color: "#856404" }}
-            >
+          <div className="px-5 py-3 bg-yellow-100 rounded-lg">
+            <div className="text-2xl font-bold text-yellow-800">
               {noResults}
             </div>
-            <div style={{ fontSize: "12px", color: "#856404" }}>No Results</div>
+            <div className="text-xs text-yellow-800">No Results</div>
           </div>
         </div>
 
         {/* Search Filter */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <Filter size={16} color="#666" />
+        <div className="flex gap-2.5 items-center">
+          <Filter size={16} className="text-gray-600" />
           <input
             type="text"
             placeholder="Filter by user email..."
             value={userEmailFilter}
             onChange={(e) => setUserEmailFilter(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            style={{
-              flex: 1,
-              maxWidth: "300px",
-              padding: "8px 12px",
-              border: "1px solid #e5e7eb",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
+            className="flex-1 max-w-[300px] px-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/20 focus:border-[#667eea]"
           />
           <button
             onClick={handleSearch}
             aria-label="Search logs"
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#667eea",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500",
-            }}
+            className="px-4 py-2 bg-[#667eea] text-white border-none rounded-md cursor-pointer text-sm font-medium hover:bg-[#5568d3] transition-colors"
           >
-            <Search size={16} style={{ display: "inline", verticalAlign: "middle" }} />
+            <Search size={16} className="inline align-middle" />
           </button>
           {searchEmail && (
             <button
               onClick={handleClearSearch}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500",
-              }}
+              className="px-4 py-2 bg-red-600 text-white border-none rounded-md cursor-pointer text-sm font-medium hover:bg-red-700 transition-colors"
             >
               Clear
             </button>
@@ -273,152 +195,53 @@ export const AdminLogsViewer: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflow: "auto", padding: "20px 30px" }}>
+      <div className="flex-1 overflow-auto px-8 py-5">
         {error && (
-          <div
-            style={{
-              padding: "20px",
-              backgroundColor: "#f8d7da",
-              borderRadius: "8px",
-              color: "#721c24",
-              marginBottom: "20px",
-            }}
-          >
+          <div className="p-5 bg-red-100 rounded-lg text-red-800 mb-5">
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {isLoading && logs.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "60px 20px",
-              color: "#666",
-            }}
-          >
+          <div className="text-center py-16 px-5 text-gray-600">
             <RefreshCw
               size={48}
-              color="#667eea"
-              style={{ animation: "spin 1s linear infinite" }}
+              className="text-[#667eea] mx-auto animate-spin"
             />
-            <p style={{ marginTop: "16px" }}>Loading logs...</p>
+            <p className="mt-4">Loading logs...</p>
           </div>
         ) : logs.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "60px 20px",
-              color: "#666",
-            }}
-          >
-            <h3>No logs found</h3>
+          <div className="text-center py-16 px-5 text-gray-600">
+            <h3 className="text-lg font-semibold mb-2">No logs found</h3>
             <p>Logs will appear here once users start searching</p>
           </div>
         ) : (
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: "8px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              overflowX: "auto",
-            }}
-          >
-            <table
-              style={{
-                width: "max-content",
-                borderCollapse: "collapse",
-                fontSize: "13px",
-                minWidth: "100%",
-              }}
-            >
+          <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+            <table className="w-max border-collapse text-[13px] min-w-full">
               <thead>
-                <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #dee2e6" }}>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                <tr className="bg-gray-50 border-b-2 border-gray-300">
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     Log ID
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     Timestamp
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     User Email
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      minWidth: "300px",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black min-w-[300px]">
                     Query Text
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     Is Searchable
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     Final Result Count
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     Total Execution Time
                   </th>
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      color: "#495057",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
                     Search Status
                   </th>
                 </tr>
@@ -432,103 +255,56 @@ export const AdminLogsViewer: React.FC = () => {
                   return (
                     <tr
                       key={log.log_id || idx}
-                      style={{ borderBottom: "1px solid #f1f3f5" }}
+                      className="border-b border-gray-100"
                     >
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                        }}
-                      >
+                      <td className="px-3 py-2.5 whitespace-nowrap align-top text-black">
                         {log.log_id}
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                        }}
-                      >
+                      <td className="px-3 py-2.5 whitespace-nowrap align-top text-black">
                         {formatDate(log.timestamp)}
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                        }}
-                      >
+                      <td className="px-3 py-2.5 whitespace-nowrap align-top text-black">
                         {log.user_email || "—"}
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                          verticalAlign: "top",
-                        }}
-                      >
+                      <td className="px-3 py-2.5 whitespace-pre-wrap align-top break-words text-black">
                         {renderCell(log.query_text, idx, "query_text", 150)}
                       </td>
                       <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                          color: log.is_searchable ? "#28a745" : "#dc3545",
-                        }}
+                        className={cn(
+                          "px-3 py-2.5 whitespace-nowrap align-top",
+                          log.is_searchable ? "text-green-600" : "text-red-600"
+                        )}
                       >
                         {log.is_searchable ? "✓" : "✗"}
                       </td>
                       <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                          fontWeight: "600",
-                          fontSize: "14px",
-                          color: resultCount > 0 ? "#28a745" : "#6c757d",
-                        }}
+                        className={cn(
+                          "px-3 py-2.5 whitespace-nowrap align-top font-semibold text-sm",
+                          resultCount > 0 ? "text-green-600" : "text-gray-500"
+                        )}
                       >
                         {resultCount}
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                        }}
-                      >
+                      <td className="px-3 py-2.5 whitespace-nowrap align-top">
                         <span
-                          style={{
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            backgroundColor: isSlow ? "#fff3cd" : "#e7f3ff",
-                            color: isSlow ? "#856404" : "#004085",
-                          }}
+                          className={cn(
+                            "px-2 py-1 rounded text-xs",
+                            isSlow
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-blue-100 text-blue-900"
+                          )}
                         >
                           {(durationMs / 1000).toFixed(2)}s
                         </span>
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          verticalAlign: "top",
-                        }}
-                      >
+                      <td className="px-3 py-2.5 whitespace-nowrap align-top">
                         <span
-                          style={{
-                            padding: "4px 10px",
-                            borderRadius: "12px",
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            backgroundColor:
-                              resultCount > 0 ? "#d4edda" : "#fff3cd",
-                            color: resultCount > 0 ? "#155724" : "#856404",
-                          }}
+                          className={cn(
+                            "px-2.5 py-1 rounded-full text-xs font-semibold",
+                            resultCount > 0
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          )}
                         >
                           {resultCount > 0 ? "Success" : "No Results"}
                         </span>
@@ -541,14 +317,6 @@ export const AdminLogsViewer: React.FC = () => {
           </div>
         )}
       </div>
-
-      <style>{`
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
     </div>
   );
 };
-

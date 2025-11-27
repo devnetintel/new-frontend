@@ -165,7 +165,7 @@ export const AdminDatabaseViewer: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex bg-gray-50">
+    <div className="h-full flex bg-gray-50 light">
       {/* Sidebar */}
       <div className="w-[250px] bg-white border-r border-gray-200 flex flex-col max-h-screen">
         <div className="p-5 border-b border-gray-200">
@@ -213,7 +213,9 @@ export const AdminDatabaseViewer: React.FC = () => {
                     🏢 {ws.owner_name} ({ws.workspace_id})
                   </h3>
                   <div className="text-[32px] font-bold mb-1">{actual}</div>
-                  <div className="text-xs opacity-85">profiles in workspace</div>
+                  <div className="text-xs opacity-85">
+                    profiles in workspace
+                  </div>
                   <div className="mt-2.5 text-xs">
                     Recorded: {recorded} | Actual: {actual}{" "}
                     <span
@@ -371,7 +373,7 @@ export const AdminDatabaseViewer: React.FC = () => {
                       <th
                         key={col.column_name}
                         onClick={() => handleSort(col.column_name)}
-                        className="p-3 text-left font-semibold text-gray-700 cursor-pointer select-none whitespace-nowrap"
+                        className="p-3 text-left font-semibold text-black cursor-pointer select-none whitespace-nowrap"
                       >
                         {col.column_name}
                         <br />
@@ -393,7 +395,7 @@ export const AdminDatabaseViewer: React.FC = () => {
                       {columns.map((col) => (
                         <td
                           key={col.column_name}
-                          className="px-3 py-2.5 whitespace-nowrap align-top"
+                          className="px-3 py-2.5 whitespace-nowrap align-top text-black"
                         >
                           {formatValue(row[col.column_name])}
                         </td>
@@ -409,4 +411,3 @@ export const AdminDatabaseViewer: React.FC = () => {
     </div>
   );
 };
-
