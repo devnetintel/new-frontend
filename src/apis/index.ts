@@ -9,6 +9,9 @@ export * from "./search";
 // Chat APIs
 export * from "./chat";
 
+// Transcription APIs
+export * from "./transcribe";
+
 // Workspace APIs
 export * from "./workspaces";
 
@@ -38,3 +41,6 @@ export type {
   AdminTableColumn,
   AdminWorkspaceStats,
 } from "@/types";
+
+// Re-export transcription types
+export type { TranscriptionResponse } from "./transcribe";

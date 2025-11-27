@@ -19,6 +19,7 @@ import { AIVoiceInput } from "@/components/ui/ai-voice-input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/nextjs";
 import { sendChatMessage } from "@/apis/chat";
+import { transcribeAudio } from "@/apis/transcribe";
 
 interface Message {
   role: "user" | "system";
@@ -43,7 +44,7 @@ export function VoiceDiscoveryInline({
   const { getToken } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
+  const [inputMode, setInputMode] = useState<"voice" | "text">("text");
   const [textInput, setTextInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [refinedQuery, setRefinedQuery] = useState("");
@@ -55,6 +56,10 @@ export function VoiceDiscoveryInline({
 
   const hasStartedRef = useRef(false);
   const queryEditRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Timer for recording duration
   useEffect(() => {
@@ -159,20 +164,128 @@ export function VoiceDiscoveryInline({
     }
   };
 
-  // Handle voice input timing
-  useEffect(() => {
-    if (!isListening) return;
+  // Start audio recording
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
 
-    // Show voice UI for 3.5 seconds, then trigger conversation
-    const timer = setTimeout(() => {
+      // Use webm format (browser default, recommended)
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "";
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: mimeType || undefined,
+      });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        // Stop all tracks
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+        }
+
+        // Transcribe audio
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: mimeType || "audio/webm",
+          });
+          await handleTranscription(audioBlob);
+        }
+
+        audioChunksRef.current = [];
+      };
+
+      mediaRecorder.start();
+      setIsListening(true);
+    } catch (error) {
+      console.error("Error starting recording:", error);
       setIsListening(false);
-      sendChatMessageToAPI(
-        "At my company I handle performance marketing and I've got a big budget, so I want to talk with people who had handled big budgets for performance marketing in a B2C scenario."
-      );
-    }, 3500);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "system",
+          content:
+            error instanceof Error && error.name === "NotAllowedError"
+              ? "Microphone permission denied. Please allow microphone access."
+              : "Failed to start recording. Please try again.",
+        },
+      ]);
+    }
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [isListening, sendChatMessageToAPI]);
+  // Stop audio recording
+  const stopRecording = useCallback(() => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+    setIsListening(false);
+  }, []);
+
+  // Handle transcription
+  const handleTranscription = useCallback(
+    async (audioBlob: Blob) => {
+      setIsTranscribing(true);
+      try {
+        const token = await getToken();
+        if (!token) {
+          throw new Error("Authentication required. Please sign in.");
+        }
+
+        const result = await transcribeAudio(audioBlob, token, sessionId);
+
+        // Put transcribed text in input for user to edit
+        setTextInput(result.text);
+
+        // Optionally auto-send if user prefers (or let them edit first)
+        // For now, we'll just put it in the input box
+      } catch (error) {
+        console.error("Transcription error:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "system",
+            content:
+              error instanceof Error
+                ? error.message
+                : "Could not transcribe. Please try again.",
+          },
+        ]);
+      } finally {
+        setIsTranscribing(false);
+      }
+    },
+    [getToken, sessionId]
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
 
   // Initialize conversation only once when component becomes active
   useEffect(() => {
@@ -330,6 +443,9 @@ export function VoiceDiscoveryInline({
                           style={{ animationDelay: "300ms" }}
                         />
                       </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Processing...
+                      </p>
                     </div>
                   </div>
                 )}
@@ -346,6 +462,8 @@ export function VoiceDiscoveryInline({
                     size="sm"
                     onClick={() => setInputMode("voice")}
                     className="gap-2"
+                    disabled={true}
+                    title="Voice conversation feature coming soon"
                   >
                     <Sparkles className="h-3 w-3" />
                     Voice
@@ -393,7 +511,7 @@ export function VoiceDiscoveryInline({
                         variant="ghost"
                         size="icon"
                         onClick={() => {
-                          setIsListening(false);
+                          stopRecording();
                           setRecordingDuration(0);
                         }}
                         className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors"
@@ -403,13 +521,7 @@ export function VoiceDiscoveryInline({
                       <Button
                         size="icon"
                         onClick={() => {
-                          console.log("Recording stopped");
-                          // Trigger completion manually since we removed AIVoiceInput
-                          setIsListening(false);
-                          setRecordingDuration(0);
-                          sendChatMessageToAPI(
-                            "At my company I handle performance marketing and I've got a big budget, so I want to talk with people who had handled big budgets for performance marketing in a B2C scenario."
-                          );
+                          stopRecording();
                         }}
                         className="h-9 w-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all"
                       >
@@ -420,27 +532,75 @@ export function VoiceDiscoveryInline({
                 ) : inputMode === "voice" ? (
                   <Button
                     className="w-full h-14 text-base gap-3"
-                    onClick={() => setIsListening(true)}
+                    onClick={startRecording}
+                    disabled={isTranscribing}
                   >
                     <Sparkles className="h-5 w-5" />
-                    Tap to Speak
+                    {isTranscribing ? "Transcribing..." : "Tap to Speak"}
                   </Button>
                 ) : (
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={textInput}
-                      onChange={(e) => setTextInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleTextSubmit()}
-                      placeholder="Type your response..."
-                      className="flex-1 bg-card border border-border rounded-lg px-4 py-3 text-sm"
-                    />
-                    <Button
-                      onClick={handleTextSubmit}
-                      disabled={!textInput.trim()}
-                    >
-                      Send
-                    </Button>
+                    <div className="flex-1 relative">
+                      {isTranscribing ? (
+                        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-3 text-sm">
+                          <div className="flex gap-1">
+                            <div
+                              className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                              style={{ animationDelay: "0ms" }}
+                            />
+                            <div
+                              className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                              style={{ animationDelay: "150ms" }}
+                            />
+                            <div
+                              className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"
+                              style={{ animationDelay: "300ms" }}
+                            />
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            Transcribing audio...
+                          </span>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          value={textInput}
+                          onChange={(e) => setTextInput(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleTextSubmit()
+                          }
+                          placeholder="Type your response..."
+                          className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm"
+                        />
+                      )}
+                    </div>
+                    {isTranscribing ? (
+                      <Button
+                        size="icon"
+                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground"
+                        disabled
+                      >
+                        <div className="h-3 w-3 rounded-full bg-white animate-pulse" />
+                      </Button>
+                    ) : textInput.trim() ? (
+                      <Button
+                        size="icon"
+                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                        onClick={handleTextSubmit}
+                        disabled={isProcessing}
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="icon"
+                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                        onClick={startRecording}
+                        disabled={isProcessing || isTranscribing}
+                      >
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
