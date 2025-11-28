@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, Settings, PlusCircle } from "lucide-react";
+import { Home, Library, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   SignInButton,
   SignedIn,
   SignedOut,
-  UserButton,
   useAuth,
 } from "@clerk/nextjs";
+import { UserMenu } from "@/components/user-menu";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -66,16 +66,8 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto flex flex-col items-center justify-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-lg opacity-60 hover:opacity-100"
-        >
-          <Settings className="h-5 w-5" />
-          <span className="sr-only">Settings</span>
-        </Button>
         <SignedIn>
-          <UserButton afterSignOutUrl="/sign-in" />
+          <UserMenu afterSignOutUrl="/sign-in" />
         </SignedIn>
         <SignedOut>
           <SignInButton />

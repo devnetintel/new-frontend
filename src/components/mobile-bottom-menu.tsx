@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, LayoutDashboard } from "lucide-react";
-import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { UserMenu } from "@/components/user-menu";
 
 export function MobileBottomMenu() {
   const pathname = usePathname();
@@ -69,19 +70,11 @@ export function MobileBottomMenu() {
         </strong>
       </button>
 
-      {/* Profile/UserButton - Direct integration like sidebar */}
+      {/* Profile/UserMenu - Custom menu */}
       <div className="mobile-menu__item">
         <SignedIn>
           <div className="flex flex-col items-center justify-center gap-1">
-            <UserButton
-              afterSignOutUrl="/sign-in"
-              appearance={{
-                elements: {
-                  avatarBox: "h-6 w-6",
-                  userButtonPopoverCard: "shadow-lg",
-                },
-              }}
-            />
+            <UserMenu afterSignOutUrl="/sign-in" />
             <strong className="mobile-menu__text">Profile</strong>
           </div>
         </SignedIn>

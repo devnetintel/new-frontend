@@ -40,7 +40,21 @@ export default function RootLayout({
               <SidebarWrapper />
               <LayoutContent>{children}</LayoutContent>
             </HubProvider>
-            <Toaster />
+            <Toaster
+              position="bottom-right"
+              richColors
+              closeButton
+              toastOptions={{
+                duration: 4000,
+                classNames: {
+                  toast: "group toast",
+                  title: "group-[.toast]:text-sm group-[.toast]:font-medium",
+                  description: "group-[.toast]:text-xs",
+                  actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+                  cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+                },
+              }}
+            />
           </ThemeProvider>
         </ClerkProvider>
       </body>

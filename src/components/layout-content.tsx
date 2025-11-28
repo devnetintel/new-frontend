@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ModeToggle } from "./mode-toggle";
 import { MobileBottomMenu } from "./mobile-bottom-menu";
 
 export function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -23,7 +22,6 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
             : "flex-1 md:pl-16 min-h-screen relative pb-16 md:pb-0 w-full min-w-0 overflow-x-hidden"
         }
       >
-        {!isAuthPage && !isAdminPage && !isPublicRoute && <ModeToggle />}
         <div className="w-full min-w-0">{children}</div>
       </main>
       {/* Mobile Bottom Menu - Only show on authenticated, non-public routes */}

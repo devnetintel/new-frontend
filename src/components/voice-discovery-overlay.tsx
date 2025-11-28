@@ -13,6 +13,9 @@ import {
   Keyboard,
   ArrowUp,
   Check,
+  ArrowLeft,
+  Copy,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AIVoiceInput } from "@/components/ui/ai-voice-input";
@@ -20,6 +23,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/nextjs";
 import { sendChatMessage } from "@/apis/chat";
 import { transcribeAudio } from "@/apis/transcribe";
+import { SearchInput } from "@/components/search-input";
+import { toast } from "sonner";
+import { ShinyText } from "@/components/shiny-text";
 
 interface Message {
   role: "user" | "system";
@@ -62,6 +68,9 @@ export function VoiceDiscoveryInline({
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState<
+    number | null
+  >(null);
 
   // Timer for recording duration
   useEffect(() => {
@@ -286,6 +295,10 @@ export function VoiceDiscoveryInline({
       ) {
         mediaRecorderRef.current.stop();
       }
+      // Stop any speech synthesis
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
@@ -314,7 +327,7 @@ export function VoiceDiscoveryInline({
 
   if (!isActive) return null;
 
-    // Color classes matching the network selector
+  // Color classes matching the network selector
   const colorClasses = [
     {
       bg: "bg-blue-500/10",
@@ -348,11 +361,11 @@ export function VoiceDiscoveryInline({
     .map((networkId) => {
       const workspace = workspaces.find((w) => w.id === networkId);
       if (!workspace) return null;
-      
+
       // Find the index of this workspace in the full workspaces array to get consistent color
       const workspaceIndex = workspaces.findIndex((w) => w.id === networkId);
       const color = colorClasses[workspaceIndex % colorClasses.length];
-      
+
       return {
         id: networkId,
         name: workspace.name,
@@ -363,47 +376,16 @@ export function VoiceDiscoveryInline({
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-top-4 duration-500">
-      {/* Header with Network Pills */}
-      <div className="w-full max-w-4xl mx-auto mb-6">
-        <div className="flex items-center">
-          {/* Selected Networks Pills */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground font-medium">
-              Searching:
-            </span>
-            {selectedWorkspaces.length > 0 ? (
-              selectedWorkspaces.map((workspace) => (
-                <div
-                  key={workspace.id}
-                  className={cn(
-                    "px-3 py-1 rounded-full text-xs font-medium border",
-                    workspace.color.bg,
-                    workspace.color.border,
-                    workspace.color.text
-                  )}
-                >
-                  {workspace.name}&apos;s Network
-                </div>
-              ))
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                No networks selected
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Cancel Button - Fixed positioned */}
+      {/* Back Button - Fixed positioned on left */}
       <Button
         variant="ghost"
         size="sm"
         onClick={onClose}
-        className="fixed top-4 right-20 z-40 rounded-full bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 text-muted-foreground hover:text-foreground gap-2"
+        className="fixed top-4 left-4 md:left-20 z-40 rounded-full bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 text-muted-foreground hover:text-foreground gap-2"
       >
-        <X className="h-4 w-4" />
-        <span className="hidden sm:inline">Cancel</span>
-        <span className="sr-only">Cancel</span>
+        <ArrowLeft className="h-4 w-4" />
+        <span className="hidden sm:inline">Back</span>
+        <span className="sr-only">Back</span>
       </Button>
 
       {/* Persistent Query Evolution Display */}
@@ -411,7 +393,7 @@ export function VoiceDiscoveryInline({
         <div className="w-full max-w-4xl mx-auto mb-6">
           <div className="bg-muted/30 border border-border/50 rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+              <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground mb-1">
                   Refining your search...
@@ -426,7 +408,7 @@ export function VoiceDiscoveryInline({
       )}
 
       {/* Conversation Thread */}
-      <div className="w-full max-w-4xl mx-auto space-y-6 py-4">
+      <div className="w-full max-w-4xl mx-auto space-y-6 py-4 pb-32">
         {!refinedQuery || conversationStep < 3 ? (
           <>
             {/* Initial state */}
@@ -450,26 +432,96 @@ export function VoiceDiscoveryInline({
             {/* Messages - Always show when they exist */}
             {messages.length > 0 && (
               <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "flex",
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    )}
-                  >
+                {messages.map((message, index) => {
+                  const handleCopy = () => {
+                    navigator.clipboard.writeText(message.content);
+                    toast.success("Copied to clipboard");
+                  };
+
+                  const handleReadAloud = () => {
+                    if ("speechSynthesis" in window) {
+                      // Stop any currently playing speech
+                      window.speechSynthesis.cancel();
+
+                      if (speakingMessageIndex === index) {
+                        // If already speaking this message, stop it
+                        setSpeakingMessageIndex(null);
+                        return;
+                      }
+
+                      const utterance = new SpeechSynthesisUtterance(
+                        message.content
+                      );
+                      utterance.lang = "en-US";
+                      utterance.rate = 1;
+                      utterance.pitch = 1;
+
+                      utterance.onend = () => {
+                        setSpeakingMessageIndex(null);
+                      };
+
+                      utterance.onerror = () => {
+                        setSpeakingMessageIndex(null);
+                      };
+
+                      window.speechSynthesis.speak(utterance);
+                      setSpeakingMessageIndex(index);
+                    }
+                  };
+
+                  return (
                     <div
+                      key={index}
                       className={cn(
-                        "max-w-[80%] rounded-2xl px-5 py-4 leading-relaxed",
+                        "flex",
                         message.role === "user"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          ? "justify-end"
+                          : "justify-start"
                       )}
                     >
-                      <p className="text-sm">{message.content}</p>
+                      <div className="flex flex-col gap-1 max-w-[80%]">
+                        <div
+                          className={cn(
+                            "rounded-2xl px-5 py-4 leading-relaxed",
+                            message.role === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
+                          )}
+                        >
+                          <p className="text-base">{message.content}</p>
+                        </div>
+                        {/* Action icons - only show for system messages */}
+                        {message.role === "system" && (
+                          <div className="flex items-center gap-2 px-1">
+                            <button
+                              onClick={handleCopy}
+                              className="flex items-center justify-center transition-colors duration-200 text-muted-foreground hover:text-foreground p-1"
+                              title="Copy"
+                            >
+                              <Copy className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={handleReadAloud}
+                              className={cn(
+                                "flex items-center justify-center transition-colors duration-200 p-1",
+                                speakingMessageIndex === index
+                                  ? "text-primary"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                              title={
+                                speakingMessageIndex === index
+                                  ? "Stop reading"
+                                  : "Read aloud"
+                              }
+                            >
+                              <Volume2 className="h-5 w-5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {isProcessing && (
                   <div className="flex justify-start">
@@ -488,164 +540,14 @@ export function VoiceDiscoveryInline({
                           style={{ animationDelay: "300ms" }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Processing...
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Input Area - Show after first message and when not processing */}
-            {messages.length > 0 && !isProcessing && (
-              <div className="pt-4">
-                {/* Mode Toggle Buttons */}
-                <div className="flex gap-2 mb-3">
-                  <Button
-                    variant={inputMode === "voice" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setInputMode("voice")}
-                    className="gap-2"
-                    disabled={true}
-                    title="Voice conversation feature coming soon"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    Voice
-                  </Button>
-                  <Button
-                    variant={inputMode === "text" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setInputMode("text")}
-                    className="gap-2"
-                  >
-                    <Keyboard className="h-3 w-3" />
-                    Text
-                  </Button>
-                </div>
-
-                {/* WhatsApp-style Voice Input */}
-                {isListening ? (
-                  <div className="flex items-center gap-4 w-full bg-muted/30 border border-border/50 rounded-xl px-4 py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                      </div>
-                      <span className="text-sm font-medium tabular-nums text-foreground/80">
-                        {formatDuration(recordingDuration)}
-                      </span>
-                      <div className="h-8 flex-1 flex items-center gap-0.5 px-2 opacity-50">
-                        {/* Fake waveform visualization */}
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="w-1 bg-primary/60 rounded-full animate-pulse"
-                            style={{
-                              height: `${Math.max(20, Math.random() * 100)}%`,
-                              animationDelay: `${i * 0.1}s`,
-                              animationDuration: "0.8s",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          stopRecording();
-                          setRecordingDuration(0);
-                        }}
-                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        onClick={() => {
-                          stopRecording();
-                        }}
-                        className="h-9 w-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all"
-                      >
-                        <ArrowUp className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : inputMode === "voice" ? (
-                  <Button
-                    className="w-full h-14 text-base gap-3"
-                    onClick={startRecording}
-                    disabled={isTranscribing}
-                  >
-                    <Sparkles className="h-5 w-5" />
-                    {isTranscribing ? "Transcribing..." : "Tap to Speak"}
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      {isTranscribing ? (
-                        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-4 py-3 text-sm">
-                          <div className="flex gap-1">
-                            <div
-                              className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"
-                              style={{ animationDelay: "0ms" }}
-                            />
-                            <div
-                              className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"
-                              style={{ animationDelay: "150ms" }}
-                            />
-                            <div
-                              className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"
-                              style={{ animationDelay: "300ms" }}
-                            />
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            Transcribing audio...
-                          </span>
-                        </div>
-                      ) : (
-                        <input
-                          type="text"
-                          value={textInput}
-                          onChange={(e) => setTextInput(e.target.value)}
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleTextSubmit()
-                          }
-                          placeholder="Type your response..."
-                          className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm"
+                      <div className="mt-2">
+                        <ShinyText
+                          text="Processing..."
+                          speed={3}
+                          className="text-xs"
                         />
-                      )}
+                      </div>
                     </div>
-                    {isTranscribing ? (
-                      <Button
-                        size="icon"
-                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground"
-                        disabled
-                      >
-                        <div className="h-3 w-3 rounded-full bg-white animate-pulse" />
-                      </Button>
-                    ) : textInput.trim() ? (
-                      <Button
-                        size="icon"
-                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-                        onClick={handleTextSubmit}
-                        disabled={isProcessing}
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <Button
-                        size="icon"
-                        className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-                        onClick={startRecording}
-                        disabled={isProcessing || isTranscribing}
-                      >
-                        <Mic className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 )}
               </div>
@@ -705,6 +607,25 @@ export function VoiceDiscoveryInline({
             </div>
           </div>
         )}
+      </div>
+
+      {/* SearchInput - Fixed at bottom, always visible */}
+      <div className="fixed bottom-0 left-0 md:left-16 right-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border/50 p-4 pb-safe">
+        <div className="w-full max-w-4xl mx-auto">
+          <SearchInput
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            onSearch={(value) => {
+              if (value.trim()) {
+                sendChatMessageToAPI(value);
+              }
+            }}
+            isThinking={isProcessing}
+            sessionId={sessionId}
+            placeholder="Type your response..."
+            selectedNetworks={selectedWorkspaces}
+          />
+        </div>
       </div>
     </div>
   );

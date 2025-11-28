@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth, useUser, UserButton } from "@clerk/nextjs"
+import { useAuth, useUser } from "@clerk/nextjs"
+import { UserMenu } from "@/components/user-menu"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Search, Upload, Share2, Copy, Clock, CheckCircle2, XCircle, UserPlus, ChevronDown, Sparkles, ChevronUp } from "lucide-react"
@@ -174,7 +175,7 @@ export default function Dashboard() {
                             <span className="sm:hidden">Search</span>
                         </Button>
                     </Link>
-                    <UserButton afterSignOutUrl="/sign-in" />
+                    <UserMenu afterSignOutUrl="/sign-in" />
                 </div>
             </header>
 

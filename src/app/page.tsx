@@ -27,6 +27,7 @@ function HomePageContent() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
   const router = useRouter();
+
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingStep, setThinkingStep] = useState(0);
   const [results, setResults] = useState<Connection[]>([]);
@@ -45,6 +46,9 @@ function HomePageContent() {
   const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([]);
   const [isVoiceDiscoveryOpen, setIsVoiceDiscoveryOpen] = useState(false);
   const [originalQuery, setOriginalQuery] = useState<string>("");
+  const [shouldAnimateInput, setShouldAnimateInput] = useState(false);
+  const [showOverlayAfterAnimation, setShowOverlayAfterAnimation] =
+    useState(false);
 
   // CRITICAL: Capture workspace referral from URL BEFORE Clerk redirects
   // This runs immediately on page load to preserve workspace through auth flow
@@ -412,8 +416,8 @@ function HomePageContent() {
                       className={cn(
                         "flex-1 min-w-[140px] md:min-w-[200px] p-2 md:p-4 rounded-lg md:rounded-xl border text-left transition-all duration-200",
                         isSelected
-                          ? `${color.bg} ${color.border} shadow-[0_0_15px_rgba(59,130,246,0.15)]`
-                          : "bg-card border-border/50 hover:border-border hover:bg-muted/50 opacity-60"
+                          ? `${color.bg} ${color.border} shadow-[0_0_15px_rgba(59,130,246,0.15)] hover:shadow-[0_0_20px_rgba(59,130,246,0.25)]`
+                          : "bg-card border-border/50 opacity-60 hover:opacity-100 hover:border-border hover:bg-muted/50 hover:shadow-md"
                       )}
                     >
                       <div className="flex items-center justify-between mb-0.5 md:mb-1">
@@ -449,7 +453,16 @@ function HomePageContent() {
           <SearchInput
             onSearch={(query) => {
               setQuery(query);
-              setIsVoiceDiscoveryOpen(true);
+              setShouldAnimateInput(true);
+              // Delay showing overlay until animation completes
+              setTimeout(() => {
+                setShowOverlayAfterAnimation(true);
+                setIsVoiceDiscoveryOpen(true);
+              }, 600); // Match animation duration
+            }}
+            animateToBottom={shouldAnimateInput}
+            onAnimationComplete={() => {
+              setShouldAnimateInput(false);
             }}
             isThinking={isThinking}
             placeholder="Ask anything..."
@@ -458,15 +471,19 @@ function HomePageContent() {
       )}
 
       {/* Voice Discovery Inline Component */}
-      {isVoiceDiscoveryOpen && !hasSearched && (
+      {showOverlayAfterAnimation && isVoiceDiscoveryOpen && !hasSearched && (
         <VoiceDiscoveryInline
           isActive={isVoiceDiscoveryOpen}
           onClose={() => {
             setIsVoiceDiscoveryOpen(false);
+            setShowOverlayAfterAnimation(false);
+            setShouldAnimateInput(false);
             setQuery("");
           }}
           onSearch={(finalQuery, sessionId) => {
             setIsVoiceDiscoveryOpen(false);
+            setShowOverlayAfterAnimation(false);
+            setShouldAnimateInput(false);
             setQuery("");
             handleSearch(finalQuery, sessionId);
           }}
