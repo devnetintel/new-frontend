@@ -6,15 +6,9 @@ import { useAuth, useUser } from "@clerk/nextjs"
 import { UserMenu } from "@/components/user-menu"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Search, Upload, Share2, Copy, Clock, CheckCircle2, XCircle, UserPlus, ChevronDown, Sparkles, ChevronUp } from "lucide-react"
+import { Search, Upload, Share2, Copy, Clock, CheckCircle2, XCircle, UserPlus, ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { fetchMyRequests, type IntroRequest } from "@/services"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
@@ -150,26 +144,6 @@ export default function Dashboard() {
                     <p className="text-sm md:text-base text-muted-foreground">Manage your network and track introductions.</p>
                 </div>
                 <div className="flex items-center gap-2 md:gap-4 flex-wrap">
-                    {/* DEV TOOL: State Simulator - Hidden on mobile */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-7 md:h-8 text-xs md:text-sm border-dashed border-yellow-500/50 text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 hidden md:flex shrink-0">
-                                <Sparkles className="mr-1.5 md:mr-2 h-3 w-3" />
-                                <span className="hidden lg:inline">Sim: {userState === "new_spoke" ? "New Spoke User" : "Active Hub User"}</span>
-                                <span className="lg:hidden">Sim</span>
-                                <ChevronDown className="ml-1.5 md:ml-2 h-3 w-3 opacity-50" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setUserState("new_spoke")}>
-                                New Spoke User (No Uploads)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setUserState("active_hub")}>
-                                Active Hub User (Has Network)
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
                     <Link href="/" className="shrink-0">
                         <Button size="sm" className="h-7 md:h-10 text-xs md:text-sm whitespace-nowrap">
                             <Search className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />

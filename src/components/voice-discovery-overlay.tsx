@@ -415,19 +415,18 @@ export function VoiceDiscoveryInline({
 
         {/* Bottom Sheet - solid background */}
         <div
-          className="absolute top-2 left-0 right-0 bottom-0 rounded-t-3xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden bg-background"
+          className="absolute top-2 left-0 right-0 bottom-0 rounded-t-3xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden bg-background border-t border-border/50"
           style={{
             animation: "slideUp 0.3s ease-out",
             transform: "translateY(0)",
             willChange: "auto",
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
-            borderTop: "2px solid rgba(255, 255, 255, 0.1)",
             touchAction: "none",
           }}
         >
           {/* Top handle bar for visual boundary */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-white/40 rounded-full z-20 mt-2" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-border/60 rounded-full z-20 mt-2" />
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-transparent rounded-t-3xl pointer-events-none z-0" />

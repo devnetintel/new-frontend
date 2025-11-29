@@ -8,20 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Users, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VoiceDiscoveryInline } from "@/components/voice-discovery-overlay";
-import {
-  fetchWorkspaces,
-  WorkspaceInfo,
-} from "@/services";
+import { fetchWorkspaces, WorkspaceInfo } from "@/services";
 import { toast } from "sonner";
 import {
   captureReferralFromUrl,
   processPendingWorkspace,
 } from "@/utils/workspaceReferral";
+import { useChat } from "@/contexts/chat-context";
 
 function HomePageContent() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
   const router = useRouter();
+  const { setIsChatOpen } = useChat();
 
   const [query, setQuery] = useState("");
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
@@ -191,6 +190,13 @@ function HomePageContent() {
     }
   }, [user?.id, getToken, isLoadingWorkspaces, isSignedIn]);
 
+  // Reset chat open state when voice discovery is closed or when navigating back to home
+  useEffect(() => {
+    if (!isVoiceDiscoveryOpen) {
+      setIsChatOpen(false);
+    }
+  }, [isVoiceDiscoveryOpen, setIsChatOpen]);
+
   if (!isLoaded || !isSignedIn) {
     return null;
   }
@@ -205,23 +211,23 @@ function HomePageContent() {
 
   const handleSearch = async (searchQuery: string, sessionId?: string) => {
     setQuery(searchQuery);
-    
+
     // Check if workspaces are selected
     if (selectedWorkspaceIds.length === 0) {
       toast.error("Please select at least one network to search");
       return;
     }
-    
+
     // Navigate to results page with search parameters
     const params = new URLSearchParams({
       q: searchQuery,
       workspaces: selectedWorkspaceIds.join(","),
     });
-    
+
     if (sessionId) {
       params.append("sessionId", sessionId);
     }
-    
+
     router.push(`/results?${params.toString()}`);
   };
 
@@ -240,12 +246,11 @@ function HomePageContent() {
     return `Hi ${firstName}, how can we help you?`;
   };
 
-
   return (
     <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-9xl mx-auto">
       {/* Header / Initial State - Hide when conversation is active */}
       {!isVoiceDiscoveryOpen && (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-8 mb-20">
+        <div className="flex-1 flex flex-col items-center justify-start md:justify-center space-y-4 md:space-y-8 mb-8 md:mb-20 mt-10 md:mt-0">
           <h1 className="text-4xl md:text-5xl font-medium text-center tracking-tight text-foreground/90">
             {getGreeting()}
           </h1>
@@ -346,27 +351,27 @@ function HomePageContent() {
           <div className="mt-4 w-full max-w-4xl mx-auto">
             <SearchInput
               onSearch={(query) => {
-              setQuery(query);
-              // On mobile, show immediately; on desktop, animate first
-              if (window.innerWidth < 768) {
-                setIsVoiceDiscoveryOpen(true);
-                setShowOverlayAfterAnimation(true);
-              } else {
-                setShouldAnimateInput(true);
-                // Delay showing overlay until animation completes
-                setTimeout(() => {
-                  setShowOverlayAfterAnimation(true);
+                setQuery(query);
+                // On mobile, show immediately; on desktop, animate first
+                if (window.innerWidth < 768) {
                   setIsVoiceDiscoveryOpen(true);
-                }, 600); // Match animation duration
-              }
-            }}
-            animateToBottom={shouldAnimateInput}
-            onAnimationComplete={() => {
-              setShouldAnimateInput(false);
-            }}
-            isThinking={false}
-            placeholder="Ask anything..."
-          />
+                  setShowOverlayAfterAnimation(true);
+                } else {
+                  setShouldAnimateInput(true);
+                  // Delay showing overlay until animation completes
+                  setTimeout(() => {
+                    setShowOverlayAfterAnimation(true);
+                    setIsVoiceDiscoveryOpen(true);
+                  }, 600); // Match animation duration
+                }
+              }}
+              animateToBottom={shouldAnimateInput}
+              onAnimationComplete={() => {
+                setShouldAnimateInput(false);
+              }}
+              isThinking={false}
+              placeholder="Ask anything..."
+            />
           </div>
         </div>
       )}
@@ -393,7 +398,6 @@ function HomePageContent() {
           workspaces={workspaces}
         />
       )}
-
     </div>
   );
 }
