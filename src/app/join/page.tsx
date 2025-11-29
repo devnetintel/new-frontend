@@ -1,6 +1,7 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useState, useEffect } from "react"
+import { useAuth } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
@@ -8,8 +9,21 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Users, ArrowRight, ShieldCheck } from "lucide-react"
 
 function JoinContent() {
+    const { isSignedIn, isLoaded } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
+
+    useEffect(() => {
+        if (isLoaded) {
+            if (!isSignedIn) {
+                router.push("/sign-in")
+            }
+        }
+    }, [isLoaded, isSignedIn, router])
+
+    if (!isLoaded || !isSignedIn) {
+        return null
+    }
     const ref = searchParams.get("ref")
     const hubName = ref === "shubham_s" ? "Shubham" : "Ajay" // Mock logic
 
