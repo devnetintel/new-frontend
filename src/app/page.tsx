@@ -4,17 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { SearchInput } from "@/components/search-input";
-import { ProfileCard } from "@/components/profile-card";
-import { IntroRequestModal } from "@/components/intro-request-modal";
 import { Button } from "@/components/ui/button";
-import { Users, Check, Plus, Home } from "lucide-react";
+import { Users, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VoiceDiscoveryInline } from "@/components/voice-discovery-overlay";
 import {
-  searchNetwork,
   fetchWorkspaces,
-  transformPersonsToConnections,
-  Connection,
   WorkspaceInfo,
 } from "@/services";
 import { toast } from "sonner";
@@ -28,24 +23,13 @@ function HomePageContent() {
   const { user } = useUser();
   const router = useRouter();
 
-  const [isThinking, setIsThinking] = useState(false);
-  const [thinkingStep, setThinkingStep] = useState(0);
-  const [results, setResults] = useState<Connection[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<Connection | null>(
-    null
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
   const [selectedWorkspaceIds, setSelectedWorkspaceIds] = useState<string[]>(
     []
   );
   const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
-  const [isClarifying, setIsClarifying] = useState(false);
-  const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([]);
   const [isVoiceDiscoveryOpen, setIsVoiceDiscoveryOpen] = useState(false);
-  const [originalQuery, setOriginalQuery] = useState<string>("");
   const [shouldAnimateInput, setShouldAnimateInput] = useState(false);
   const [showOverlayAfterAnimation, setShowOverlayAfterAnimation] =
     useState(false);
@@ -221,95 +205,24 @@ function HomePageContent() {
 
   const handleSearch = async (searchQuery: string, sessionId?: string) => {
     setQuery(searchQuery);
-    setIsThinking(true);
-    setHasSearched(true);
-    setResults([]);
-    setThinkingStep(0);
-    setIsClarifying(false);
-    setOriginalQuery("");
-
-    try {
-      const token = await getToken();
-      if (!token) {
-        toast.error("Please sign in");
-        setIsThinking(false);
-        return;
-      }
-
-      // Check if workspaces are selected
-      if (selectedWorkspaceIds.length === 0) {
-        toast.error("Please select at least one network to search");
-        setIsThinking(false);
-        return;
-      }
-
-      // Simulate thinking steps (can be removed if not needed)
-      const stepDuration = 500;
-      const totalSteps = Math.min(thinkingMessages.length, 3);
-      for (let i = 0; i < totalSteps; i++) {
-        setThinkingStep(i);
-        await new Promise((resolve) => setTimeout(resolve, stepDuration));
-      }
-
-      // Call backend API with session_id if available
-      const result = await searchNetwork(
-        searchQuery,
-        token,
-        selectedWorkspaceIds,
-        sessionId
-      );
-
-      // Check if clarification is needed
-      if (
-        result.metadata.workflow_status === "clarification_needed" ||
-        (result.success && result.profiles.length === 0)
-      ) {
-        setIsThinking(false);
-        setIsClarifying(true);
-        setClarifyingOptions([
-          result.response || "Could you provide more details?",
-        ]);
-        return;
-      }
-
-      // Transform backend results to Connection format
-      const connections = transformPersonsToConnections(result.profiles, 2);
-      setResults(connections);
-
-      // Store original query from API
-      if (result.metadata?.filters?.original_query) {
-        setOriginalQuery(result.metadata.filters.original_query);
-      }
-
-      if (connections.length === 0) {
-        toast.info("No matches found. Try different keywords.");
-      } else {
-        toast.success(
-          `Found ${connections.length} ${
-            connections.length === 1 ? "match" : "matches"
-          }`
-        );
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to search network"
-      );
-    } finally {
-      setIsThinking(false);
+    
+    // Check if workspaces are selected
+    if (selectedWorkspaceIds.length === 0) {
+      toast.error("Please select at least one network to search");
+      return;
     }
-  };
-
-  const handleClarification = (option: string) => {
-    handleSearch(option);
-  };
-
-  const handleConnect = (id: string) => {
-    const profile = results.find((p) => p.id === id);
-    if (profile) {
-      setSelectedProfile(profile);
-      setIsModalOpen(true);
+    
+    // Navigate to results page with search parameters
+    const params = new URLSearchParams({
+      q: searchQuery,
+      workspaces: selectedWorkspaceIds.join(","),
+    });
+    
+    if (sessionId) {
+      params.append("sessionId", sessionId);
     }
+    
+    router.push(`/results?${params.toString()}`);
   };
 
   const toggleWorkspace = (workspaceId: string) => {
@@ -327,31 +240,11 @@ function HomePageContent() {
     return `Hi ${firstName}, how can we help you?`;
   };
 
-  const handleBackToHome = () => {
-    setHasSearched(false);
-    setResults([]);
-    setQuery("");
-    setOriginalQuery("");
-    setIsClarifying(false);
-    setIsVoiceDiscoveryOpen(false);
-  };
 
   return (
     <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-9xl mx-auto">
-      {/* Back to Home Button - Only show when search results are displayed */}
-      {hasSearched && (
-        <Button
-          onClick={handleBackToHome}
-          variant="outline"
-          size="sm"
-          className="fixed top-4 right-20 z-50 rounded-full bg-background/50 backdrop-blur-sm border-border/50 hover:bg-background/80 flex items-center gap-2"
-        >
-          <Home className="h-4 w-4" />
-          <span className="hidden sm:inline">Home</span>
-        </Button>
-      )}
       {/* Header / Initial State - Hide when conversation is active */}
-      {!hasSearched && !isVoiceDiscoveryOpen && (
+      {!isVoiceDiscoveryOpen && (
         <div className="flex-1 flex flex-col items-center justify-center space-y-8 mb-20">
           <h1 className="text-4xl md:text-5xl font-medium text-center tracking-tight text-foreground/90">
             {getGreeting()}
@@ -450,28 +343,36 @@ function HomePageContent() {
             )}
           </div>
 
-          <SearchInput
-            onSearch={(query) => {
+          <div className="mt-4 w-full max-w-4xl mx-auto">
+            <SearchInput
+              onSearch={(query) => {
               setQuery(query);
-              setShouldAnimateInput(true);
-              // Delay showing overlay until animation completes
-              setTimeout(() => {
-                setShowOverlayAfterAnimation(true);
+              // On mobile, show immediately; on desktop, animate first
+              if (window.innerWidth < 768) {
                 setIsVoiceDiscoveryOpen(true);
-              }, 600); // Match animation duration
+                setShowOverlayAfterAnimation(true);
+              } else {
+                setShouldAnimateInput(true);
+                // Delay showing overlay until animation completes
+                setTimeout(() => {
+                  setShowOverlayAfterAnimation(true);
+                  setIsVoiceDiscoveryOpen(true);
+                }, 600); // Match animation duration
+              }
             }}
             animateToBottom={shouldAnimateInput}
             onAnimationComplete={() => {
               setShouldAnimateInput(false);
             }}
-            isThinking={isThinking}
+            isThinking={false}
             placeholder="Ask anything..."
           />
+          </div>
         </div>
       )}
 
       {/* Voice Discovery Inline Component */}
-      {showOverlayAfterAnimation && isVoiceDiscoveryOpen && !hasSearched && (
+      {showOverlayAfterAnimation && isVoiceDiscoveryOpen && (
         <VoiceDiscoveryInline
           isActive={isVoiceDiscoveryOpen}
           onClose={() => {
@@ -493,118 +394,6 @@ function HomePageContent() {
         />
       )}
 
-      {/* Search Results State */}
-      {hasSearched && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* Sticky Search Bar for Follow-up */}
-          <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 border-b border-border/10">
-            <div className="max-w-9xl mx-auto">
-              <p className="text-2xl font-medium mb-4 text-foreground/80">
-                {query}
-              </p>
-            </div>
-          </div>
-
-          <div className="max-w-8xl mx-auto space-y-8">
-            {isThinking ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-6">
-                <div className="relative">
-                  <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-8 w-8 rounded-full bg-primary/20 animate-pulse" />
-                  </div>
-                </div>
-                <div className="text-center space-y-2">
-                  <p className="text-xl font-medium text-foreground animate-pulse">
-                    {thinkingMessages[thinkingStep] ||
-                      thinkingMessages[thinkingMessages.length - 1]}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Searching across {selectedWorkspaceIds.length} connected
-                    networks...
-                  </p>
-                </div>
-              </div>
-            ) : isClarifying ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-6 animate-in fade-in zoom-in-95 duration-300">
-                <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-medium">
-                    I found a few different types of matches.
-                  </h2>
-                  <p className="text-muted-foreground">
-                    To give you the best results, could you clarify?
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3 justify-center">
-                  {clarifyingOptions.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleClarification(option)}
-                      className="px-6 py-3 rounded-full bg-secondary hover:bg-primary/20 hover:text-primary border border-border transition-all duration-200 text-sm font-medium"
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {originalQuery && (
-                  <div className="mb-4 p-4 bg-muted/30 rounded-xl border border-border/50">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Original Query
-                    </p>
-                    <p className="text-base font-medium text-foreground">
-                      {originalQuery}
-                    </p>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <span className="text-sm font-medium uppercase tracking-wider">
-                    Sources
-                  </span>
-                  <div className="h-px flex-1 bg-border/50" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {results.map((profile) => (
-                    <ProfileCard
-                      key={profile.id}
-                      profile={profile}
-                      onConnect={() => handleConnect(profile.id)}
-                    />
-                  ))}
-                </div>
-                {results.length === 0 && (
-                  <div className="text-center text-muted-foreground mt-12">
-                    No matches found in the selected networks. Try selecting
-                    more networks or a different query.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <IntroRequestModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        profile={selectedProfile}
-        workspaceId={
-          selectedProfile?.workspace_id ||
-          (selectedWorkspaceIds.length > 0
-            ? selectedWorkspaceIds[0]
-            : undefined)
-        }
-        workspaceName={
-          selectedProfile?.workspace_id
-            ? workspaces.find((w) => w.id === selectedProfile.workspace_id)
-                ?.name
-            : selectedWorkspaceIds.length > 0
-            ? workspaces.find((w) => w.id === selectedWorkspaceIds[0])?.name
-            : undefined
-        }
-      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { fetchMyRequests, type IntroRequest } from "@/services"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
+import { MobileBottomMenu } from "@/components/mobile-bottom-menu"
 
 type UserState = "new_spoke" | "active_hub"
 
@@ -141,6 +142,7 @@ export default function Dashboard() {
     }
 
     return (
+        <>
         <div className="w-full max-w-6xl mx-auto px-3 md:px-6 py-3 md:py-6 space-y-6 md:space-y-10 box-border min-w-0">
             <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-0 border-b border-border/40 pb-4 md:pb-6">
                 <div>
@@ -458,5 +460,8 @@ export default function Dashboard() {
                 )}
             </section>
         </div>
+        {/* Mobile Bottom Menu */}
+        <MobileBottomMenu />
+        </>
     )
 }

@@ -168,7 +168,7 @@
         background: var(--component-bg);
         border-top: 1px solid var(--component-shadow);
         padding: 0.5rem 0;
-        z-index: 50;
+        z-index: 40;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
     }
 
@@ -391,6 +391,15 @@
     }
 
     /* Shiny Text Animation */
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+
     @keyframes shine {
         0% {
             background-position: 100%;

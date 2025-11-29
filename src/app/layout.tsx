@@ -8,6 +8,7 @@ import { HubProvider } from "@/lib/hub-context";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
+import { ChatProvider } from "@/contexts/chat-context";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
@@ -37,8 +38,10 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <HubProvider>
-              <SidebarWrapper />
-              <LayoutContent>{children}</LayoutContent>
+              <ChatProvider>
+                <SidebarWrapper />
+                <LayoutContent>{children}</LayoutContent>
+              </ChatProvider>
             </HubProvider>
             <Toaster
               position="bottom-right"

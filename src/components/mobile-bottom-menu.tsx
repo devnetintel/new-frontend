@@ -19,6 +19,8 @@ export function MobileBottomMenu() {
       pathname.startsWith("/dashboard/")
     ) {
       return 1; // Dashboard
+    } else if (pathname === "/results" || pathname.startsWith("/results")) {
+      return 0; // Results page - treat as Home
     }
     return -1; // None active (for profile)
   };
