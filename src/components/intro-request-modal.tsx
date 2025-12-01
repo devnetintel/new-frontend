@@ -191,7 +191,7 @@ export function IntroRequestModal({
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 className="h-24 sm:h-32 text-sm"
-                                style={{ scrollMargin: '20px' }}
+                                style={{ scrollMargin: '5px' }}
                                 placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
                                 disabled={isSubmitting || submitStatus === "success"}
                                 required

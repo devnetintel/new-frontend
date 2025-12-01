@@ -47,7 +47,7 @@ export function SearchInput({
   const audioChunksRef = React.useRef<Blob[]>([]);
   const streamRef = React.useRef<MediaStream | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
-
+  const originalScrollPositionRef = React.useRef<number | null>(null);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -77,6 +77,56 @@ export function SearchInput({
     }
     props.onKeyDown?.(e);
   };
+
+  // Check if we're in chat section to disable scrollMargin
+  const isInChatSection = React.useMemo(() => {
+    if (typeof window === "undefined" || !containerRef.current) return false;
+    let current = containerRef.current.parentElement;
+    while (current) {
+      if (
+        current.classList.contains("z-[100]") ||
+        (current.classList.contains("rounded-t-3xl") &&
+          current.classList.contains("absolute"))
+      ) {
+        return true;
+      }
+      current = current.parentElement;
+    }
+    return false;
+  }, []);
+
+  // Handle smooth scroll into view when input is focused
+  const handleScrollIntoView = React.useCallback(() => {
+    if (textareaRef.current) {
+      // Store original scroll position before scrolling
+      originalScrollPositionRef.current =
+        window.scrollY || window.pageYOffset || 0;
+
+      // For chat section, let browser handle auto-scroll naturally
+      // Don't manually call scrollIntoView - browser will handle it on focus
+      if (isInChatSection) {
+        return; // Let browser's native focus behavior handle scrolling
+      }
+
+      // For other sections, use scrollIntoView with center alignment
+      textareaRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    }
+  }, [isInChatSection]);
+
+  // Handle rollback to original scroll position when input loses focus
+  const handleScrollRollback = React.useCallback(() => {
+    if (originalScrollPositionRef.current !== null) {
+      window.scrollTo({
+        top: originalScrollPositionRef.current,
+        behavior: "smooth",
+      });
+      originalScrollPositionRef.current = null;
+    }
+  }, []);
 
   const handleTranscription = React.useCallback(
     async (audioBlob: Blob) => {
@@ -196,44 +246,28 @@ export function SearchInput({
     };
   }, []);
 
-  // Check if we're in chat section to disable scrollMargin
-  const isInChatSection = React.useMemo(() => {
-    if (typeof window === "undefined" || !containerRef.current) return false;
-    let current = containerRef.current.parentElement;
-    while (current) {
-      if (
-        current.classList.contains("z-[100]") ||
-        (current.classList.contains("rounded-t-3xl") &&
-          current.classList.contains("absolute"))
-      ) {
-        return true;
-      }
-      current = current.parentElement;
-    }
-    return false;
-  }, []);
-
   return (
-    <div
-      className={cn(
-        "relative w-full max-w-4xl mx-auto group",
-        className
-      )}
-    >
+    <div className={cn("relative w-full max-w-4xl mx-auto group", className)}>
       <div
         ref={containerRef}
         id="search-input-container"
         className="relative flex flex-col w-full p-3 bg-background border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
         style={{
-          scrollMargin: isInChatSection ? "0px" : "20px",
+          scrollMargin: isInChatSection ? "0px" : "5px",
         }}
         onClick={(e) => {
           // Focus textarea when clicking on container
-          if (
-            textareaRef.current &&
-            e.target !== textareaRef.current
-          ) {
-            textareaRef.current.focus();
+          if (textareaRef.current && e.target !== textareaRef.current) {
+            // For chat section, just focus - no scrolling
+            // For main page, scroll then focus
+            if (isInChatSection) {
+              textareaRef.current.focus();
+            } else {
+              handleScrollIntoView();
+              setTimeout(() => {
+                textareaRef.current?.focus();
+              }, 50);
+            }
           }
         }}
       >
@@ -244,13 +278,28 @@ export function SearchInput({
             onChange={handleInput}
             onKeyDown={handleKeyDown}
             onFocus={(e) => {
+              // Only scroll on main page (non-chat sections)
+              if (!isInChatSection) {
+                handleScrollIntoView();
+              }
               props.onFocus?.(e);
             }}
+            onBlur={(e) => {
+              // Only rollback on main page (non-chat sections)
+              if (!isInChatSection) {
+                handleScrollRollback();
+              }
+              props.onBlur?.(e);
+            }}
             onClick={(e) => {
+              // Only scroll on main page (non-chat sections)
+              if (!isInChatSection) {
+                handleScrollIntoView();
+              }
               props.onClick?.(e);
             }}
             className="w-full min-h-[60px] max-h-[200px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-lg relative z-10"
-            style={{ scrollMargin: isInChatSection ? "0px" : "20px" }}
+            style={{ scrollMargin: isInChatSection ? "0px" : "5px" }}
             rows={1}
             placeholder=""
             {...props}

@@ -413,4 +413,28 @@
         animation: shine 3s linear infinite;
     }
 
+    /* Shiny Text - Theme-aware gradient overlay */
+    .shiny-text-overlay {
+        background-image: linear-gradient(
+            120deg,
+            transparent 40%,
+            rgba(0, 0, 0, 0.6) 50%,
+            transparent 60%
+        );
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        pointer-events: none;
+    }
+
+    .dark .shiny-text-overlay {
+        background-image: linear-gradient(
+            120deg,
+            transparent 40%,
+            rgba(255, 255, 255, 0.9) 50%,
+            transparent 60%
+        );
+    }
+
 }
