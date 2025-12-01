@@ -629,9 +629,9 @@ export function VoiceDiscoveryInline({
               </div>
             </div>
 
-            {/* SearchInput - Fixed at bottom, hidden when final query is shown */}
+            {/* SearchInput - Fixed at bottom, outside scrollable area */}
             {!(refinedQuery && conversationStep >= 3) && (
-              <div className="sticky bottom-0 bg-background/80 border-t border-border/50 p-4 pb-safe">
+              <div className="shrink-0 bg-background border-t border-border/50 p-4 pb-safe">
                 <SearchInput
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}

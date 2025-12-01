@@ -19,23 +19,25 @@ export const ShinyText: React.FC<ShinyTextProps> = ({
   const animationDuration = `${speed}s`;
 
   return (
-    <div
+    <span
       className={cn(
-        "text-muted-foreground/60 bg-clip-text inline-block",
-        !disabled && "animate-shine",
+        "text-muted-foreground/60 inline-block relative",
         className
       )}
-      style={{
-        backgroundImage:
-          "linear-gradient(120deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 60%)",
-        backgroundSize: "200% 100%",
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        animationDuration: animationDuration,
-      }}
     >
-      {text}
-    </div>
+      <span className="relative z-10">{text}</span>
+      {!disabled && (
+        <span
+          className="absolute inset-0 shiny-text-overlay animate-shine"
+          style={{
+            animationDuration: animationDuration,
+          }}
+          aria-hidden="true"
+        >
+          {text}
+        </span>
+      )}
+    </span>
   );
 };
 

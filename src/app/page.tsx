@@ -250,7 +250,7 @@ function HomePageContent() {
     <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-9xl mx-auto">
       {/* Header / Initial State - Hide when conversation is active */}
       {!isVoiceDiscoveryOpen && (
-        <div className="flex-1 flex flex-col items-center justify-start md:justify-center space-y-4 md:space-y-8 mb-8 md:mb-20 mt-10 md:mt-0">
+        <div className="flex-1 flex flex-col items-center justify-start md:justify-center space-y-4 md:space-y-8 mb-8 md:mb-20 mt-26 md:mt-0">
           <h1 className="text-4xl md:text-5xl font-medium text-center tracking-tight text-foreground/90">
             {getGreeting()}
           </h1>
