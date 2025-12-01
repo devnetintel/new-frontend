@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth, useUser, UserButton } from "@clerk/nextjs"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Search, Upload, Share2, Copy, Clock, CheckCircle2, XCircle, UserPlus, ChevronDown, Sparkles, ChevronUp } from "lucide-react"
+import { Search, Upload, Sparkles, ChevronDown, Clock, CheckCircle2, XCircle, UserPlus, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -17,18 +17,77 @@ import {
 import { fetchMyRequests, type IntroRequest } from "@/services"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
+import { ImpactHeader } from "@/components/impact-header"
+import { RequestQueue } from "@/components/request-queue"
+import { ReviewSendModal } from "@/components/review-send-modal"
+import { RequestData } from "@/components/request-card"
 
 type UserState = "new_spoke" | "active_hub"
+
+// Mock Data for Hub Requests
+const MOCK_HUB_REQUESTS: RequestData[] = [
+    {
+        id: "req_1",
+        requester: {
+            name: "Ajay Suwalka",
+            headline: "Founder @ Antigravity",
+            historyCount: 2,
+        },
+        target: {
+            name: "Amit Gupta",
+            headline: "VP of Engineering @ TechCorp",
+        },
+        context: "Looking to discuss AI agent architecture. Amit's recent talk on federated learning was super relevant to what we're building.",
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    },
+    {
+        id: "req_2",
+        requester: {
+            name: "Sarah Chen",
+            headline: "Product Lead @ GrowthCo",
+            historyCount: 0,
+        },
+        target: {
+            name: "Piyush Agarwal",
+            headline: "Angel Investor & Advisor",
+        },
+        context: "We're raising our seed round and Piyush's portfolio is a perfect match. Would love 15 mins to pitch.",
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    },
+    {
+        id: "req_3",
+        requester: {
+            name: "Mike Ross",
+            headline: "Senior Dev @ Suits",
+            historyCount: 5,
+        },
+        target: {
+            name: "Harvey Specter",
+            headline: "Managing Partner @ PSL",
+        },
+        context: "Need advice on a legal tech implementation. Harvey is the best in the biz.",
+        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+    }
+]
 
 export default function Dashboard() {
     const { isSignedIn, isLoaded, getToken } = useAuth()
     const { user } = useUser()
     const router = useRouter()
+
     // DEV ONLY: State Simulator
     const [userState, setUserState] = useState<UserState>("active_hub")
+
+    // Spoke State
     const [requests, setRequests] = useState<IntroRequest[]>([])
     const [isLoadingRequests, setIsLoadingRequests] = useState(true)
     const [expandedRequestId, setExpandedRequestId] = useState<number | null>(null)
+
+    // Hub State
+    const [hubRequests, setHubRequests] = useState<RequestData[]>(MOCK_HUB_REQUESTS)
+    const [connectionsMade, setConnectionsMade] = useState(15)
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+    const [selectedRequest, setSelectedRequest] = useState<RequestData | null>(null)
 
     useEffect(() => {
         if (isLoaded) {
@@ -38,7 +97,7 @@ export default function Dashboard() {
         }
     }, [isLoaded, isSignedIn, router])
 
-    // Fetch requests from API
+    // Fetch requests from API (Spoke View)
     useEffect(() => {
         const loadRequests = async () => {
             if (!isSignedIn || !user?.id) {
@@ -62,12 +121,7 @@ export default function Dashboard() {
                 setRequests(data.requests)
             } catch (error) {
                 console.error("Failed to load requests:", error)
-                toast.error(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to load requests"
-                )
-            } finally {
+                // toast.error("Failed to load requests") // Suppress for now to avoid noise
                 setIsLoadingRequests(false)
             }
         }
@@ -77,11 +131,38 @@ export default function Dashboard() {
         }
     }, [isLoaded, isSignedIn, user?.id, getToken])
 
+    // Hub Actions
+    const handleReview = (id: string) => {
+        const request = hubRequests.find(r => r.id === id)
+        if (request) {
+            setSelectedRequest(request)
+            setIsReviewModalOpen(true)
+        }
+    }
+
+    const handleDecline = (id: string) => {
+        // Optimistic update
+        setHubRequests(prev => prev.filter(r => r.id !== id))
+        toast.success("Request declined", {
+            description: "We've notified the requester."
+        })
+    }
+
+    const handleSendIntro = (id: string, note: string, context: string, subject: string) => {
+        // Optimistic update
+        setHubRequests(prev => prev.filter(r => r.id !== id))
+        setConnectionsMade(prev => prev + 1)
+        toast.success("Sent! You're awesome.", {
+            description: "Intro email sent to target."
+        })
+        setIsReviewModalOpen(false)
+    }
+
     if (!isLoaded || !isSignedIn) {
         return null
     }
 
-    // Helper functions
+    // Helper functions for Spoke View
     const getTimeAgo = (timestamp: string | null) => {
         if (!timestamp) return "Unknown"
         try {
@@ -94,10 +175,9 @@ export default function Dashboard() {
     const getStatusBadge = (request: IntroRequest) => {
         const h1Approval = request.status.h1_approval?.toLowerCase() || ""
         const s2Consent = request.status.s2_consent?.toLowerCase() || ""
-        const hubName = request.workspace.owner_name || "Hub"
-        
+
         // Both approved = Connected
-        if ((h1Approval === "approved" || h1Approval === "consented") && 
+        if ((h1Approval === "approved" || h1Approval === "consented") &&
             (s2Consent === "approved" || s2Consent === "consented")) {
             return {
                 label: "Connected",
@@ -106,21 +186,19 @@ export default function Dashboard() {
                 icon: <UserPlus className="w-2.5 h-2.5 md:w-3 md:h-3 mr-0.5 md:mr-1" />
             }
         }
-        
-        // Hub approved but s2 not yet = Hub name + approved
+
+        // Hub approved but s2 not yet = Intro Sent
         if (h1Approval === "approved" || h1Approval === "consented") {
-            // Get first name from hub name
-            const hubFirstName = hubName.split(" ")[0] || hubName
             return {
-                label: `${hubFirstName} approved`,
+                label: "Intro Sent",
                 variant: "secondary" as const,
-                className: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border-blue-500/20",
+                className: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 border-purple-500/20",
                 icon: <CheckCircle2 className="w-2.5 h-2.5 md:w-3 md:h-3 mr-0.5 md:mr-1" />
             }
         }
-        
+
         // Declined
-        if (h1Approval === "declined" || s2Consent === "declined" || 
+        if (h1Approval === "declined" || s2Consent === "declined" ||
             request.status.display === "Declined") {
             return {
                 label: "Declined",
@@ -129,12 +207,12 @@ export default function Dashboard() {
                 icon: <XCircle className="w-2.5 h-2.5 md:w-3 md:h-3 mr-0.5 md:mr-1" />
             }
         }
-        
-        // Default: Pending (both not approved)
+
+        // Default: Reviewing (Hub hasn't approved yet)
         return {
-            label: "Pending",
+            label: "Reviewing",
             variant: "secondary" as const,
-            className: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border-yellow-500/20",
+            className: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border-blue-500/20",
             icon: <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 mr-0.5 md:mr-1" />
         }
     }
@@ -180,18 +258,6 @@ export default function Dashboard() {
 
             {/* HUB VIEW: Network Management */}
             <section className="rounded-xl md:rounded-2xl bg-muted/30 p-3 md:p-6 border border-border/40 w-full box-border">
-                <div className="flex items-center justify-between mb-4 md:mb-6">
-                    <h2 className="text-lg md:text-xl font-semibold flex items-center gap-1.5 md:gap-2">
-                        <Share2 className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                        My Network Hub
-                    </h2>
-                    {userState === "active_hub" && (
-                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-xs">
-                            Hub Active
-                        </Badge>
-                    )}
-                </div>
-
                 {userState === "new_spoke" ? (
                     // COLLAPSED STATE: "Activate your Hub" Banner
                     <Card className="bg-gradient-to-r from-primary/5 to-transparent border-primary/20">
@@ -216,65 +282,26 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
                 ) : (
-                    // EXPANDED STATE: Full Stats & Tools
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                        {/* Stats Card */}
-                        <Card className="bg-background border-border/50 shadow-sm">
-                            <CardHeader className="pb-1.5 md:pb-2 p-3 md:p-6">
-                                <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Network Size</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-3 md:p-6 pt-0">
-                                <div className="text-2xl md:text-3xl font-bold">495</div>
-                                <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 md:mt-1">
-                                    +12 new contacts this week
-                                </p>
-                                <div className="mt-3 md:mt-4 flex gap-1.5 md:gap-2 flex-wrap">
-                                    <Badge variant="secondary" className="text-[9px] md:text-[10px] px-1.5 py-0.5">Tech (60%)</Badge>
-                                    <Badge variant="secondary" className="text-[9px] md:text-[10px] px-1.5 py-0.5">Finance (25%)</Badge>
-                                </div>
-                            </CardContent>
-                        </Card>
+                    // EXPANDED STATE: Connector Dashboard
+                    <div className="space-y-8">
+                        <ImpactHeader
+                            connectionsMade={connectionsMade}
+                            activeRequests={hubRequests.length}
+                            userName={user?.firstName || "Connector"}
+                        />
 
-                        {/* Upload Card */}
-                        <Card className="bg-background border-border/50 shadow-sm">
-                            <CardHeader className="pb-1.5 md:pb-2 p-3 md:p-6">
-                                <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Sync Contacts</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2 md:space-y-3 p-3 md:p-6 pt-0">
-                                <Button variant="outline" className="w-full justify-start text-[10px] md:text-xs h-8 md:h-9">
-                                    <Upload className="mr-1.5 md:mr-2 h-3 w-3" />
-                                    <span className="hidden sm:inline">Upload Google Contacts</span>
-                                    <span className="sm:hidden">Google Contacts</span>
-                                </Button>
-                                <Button variant="outline" className="w-full justify-start text-[10px] md:text-xs h-8 md:h-9">
-                                    <Upload className="mr-1.5 md:mr-2 h-3 w-3" />
-                                    <span className="hidden sm:inline">Upload LinkedIn CSV</span>
-                                    <span className="sm:hidden">LinkedIn CSV</span>
-                                </Button>
-                                <p className="text-[9px] md:text-[10px] text-muted-foreground text-center pt-0.5 md:pt-1">
-                                    Last synced: 2 days ago
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        {/* Magic Link Card */}
-                        <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20 shadow-sm">
-                            <CardHeader className="pb-1.5 md:pb-2 p-3 md:p-6">
-                                <CardTitle className="text-xs md:text-sm font-medium text-primary">Your Magic Link</CardTitle>
-                                <CardDescription className="text-[10px] md:text-xs">Share access to your network.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-2 md:space-y-3 p-3 md:p-6 pt-0">
-                                <div className="flex items-center gap-1.5 md:gap-2 bg-background/80 p-1.5 md:p-2 rounded-md border border-border/50 min-w-0">
-                                    <code className="text-[10px] md:text-xs flex-1 truncate text-muted-foreground min-w-0">pni.ai/join?ref=piyush</code>
-                                    <Button size="icon" variant="ghost" className="h-5 w-5 md:h-6 md:w-6 shrink-0">
-                                        <Copy className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                    </Button>
-                                </div>
-                                <Button className="w-full h-7 md:h-8 text-[10px] md:text-xs" variant="secondary">
-                                    Copy Invite Link
-                                </Button>
-                            </CardContent>
-                        </Card>
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold flex items-center gap-2">
+                                <Clock className="h-5 w-5 text-primary" />
+                                Request Queue
+                            </h3>
+                            <RequestQueue
+                                requests={hubRequests}
+                                isLoading={false}
+                                onReview={handleReview}
+                                onDecline={handleDecline}
+                            />
+                        </div>
                     </div>
                 )}
             </section>
@@ -321,10 +348,10 @@ export default function Dashboard() {
                                 const hubFirstName = hubName.split(" ")[0] || hubName
                                 const s2Name = request.target.name
                                 const s2FirstName = s2Name.split(" ")[0] || s2Name
-                                
+
                                 const h1Approval = request.status.h1_approval?.toLowerCase() || ""
                                 const s2Consent = request.status.s2_consent?.toLowerCase() || ""
-                                
+
                                 const isHubApproved = h1Approval === "approved" || h1Approval === "consented"
                                 const isS2Connected = (s2Consent === "approved" || s2Consent === "consented") && isHubApproved
 
@@ -386,7 +413,7 @@ export default function Dashboard() {
                                                         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                                                             Timeline
                                                         </h4>
-                                                        
+
                                                         {/* Request Created */}
                                                         <div className="flex items-start gap-3">
                                                             <div className="flex flex-col items-center pt-0.5">
@@ -411,7 +438,7 @@ export default function Dashboard() {
                                                             </div>
                                                             <div className="flex-1 pt-0.5">
                                                                 <p className={`text-sm font-medium ${isHubApproved ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                                                    {hubFirstName} approved
+                                                                    {isHubApproved ? `${hubFirstName} Approved` : `Awaiting ${hubFirstName}'s Review`}
                                                                 </p>
                                                                 {isHubApproved && request.timestamps.h1_approved_at ? (
                                                                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -419,7 +446,7 @@ export default function Dashboard() {
                                                                     </p>
                                                                 ) : (
                                                                     <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
-                                                                        Waiting for approval...
+                                                                        Request is under review...
                                                                     </p>
                                                                 )}
                                                             </div>
@@ -432,7 +459,7 @@ export default function Dashboard() {
                                                             </div>
                                                             <div className="flex-1 pt-0.5">
                                                                 <p className={`text-sm font-medium ${isS2Connected ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                                                    {s2FirstName} connected
+                                                                    {isS2Connected ? `${s2FirstName} Connected` : `Awaiting ${s2FirstName}'s Acceptance`}
                                                                 </p>
                                                                 {isS2Connected && request.timestamps.s2_consented_at ? (
                                                                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -440,11 +467,23 @@ export default function Dashboard() {
                                                                     </p>
                                                                 ) : (
                                                                     <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
-                                                                        Waiting for connection...
+                                                                        {isHubApproved ? "Waiting for connection..." : "Pending Hub approval..."}
                                                                     </p>
                                                                 )}
                                                             </div>
                                                         </div>
+
+                                                        {/* Your Note Section */}
+                                                        {request.user_message && (
+                                                            <div className="mt-4 pt-4 border-t border-border/50">
+                                                                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                                                    Your Note
+                                                                </h4>
+                                                                <div className="bg-muted/30 rounded-lg p-3 text-sm text-muted-foreground italic">
+                                                                    "{request.user_message}"
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -456,6 +495,13 @@ export default function Dashboard() {
                     </div>
                 )}
             </section>
+
+            <ReviewSendModal
+                isOpen={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                request={selectedRequest}
+                onSend={handleSendIntro}
+            />
         </div>
     )
 }

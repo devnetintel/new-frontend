@@ -74,7 +74,7 @@
     }
 
     .dark {
-        --background: 220 2% 10%;
+        --background: 240 9% 6%;
         --foreground: 0 0% 95%;
 
         --card: 220 2% 12%;
@@ -140,18 +140,24 @@
     }
 
     @keyframes iconBounce {
-        0%, 100% {
+
+        0%,
+        100% {
             transform: translateY(0);
         }
+
         20% {
             transform: translateY(-0.3em);
         }
+
         40% {
             transform: translateY(0);
         }
+
         60% {
             transform: translateY(-0.1em);
         }
+
         80% {
             transform: translateY(0);
         }
@@ -286,7 +292,7 @@
     [class*="focus-within:ring"] {
         transition-delay: 0.05s;
     }
-    
+
     /* Alternative: Use a more specific approach - add transition delay only on focus */
     div:focus-within {
         transition-delay: 0.05s;
@@ -310,4 +316,111 @@
         -webkit-text-fill-color: hsl(var(--foreground)) !important;
         transition: background-color 5000s ease-in-out 0s;
     }
+}
+
+/* Module A: "The Velvet Rope" Entry Styles */
+
+/* The Main Container */
+.auth-container {
+    /* background-color: #0F0F12; Removed to allow global background */
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* The "Network" Orbs - animated blurred blobs in background */
+.network-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    /* The "Network Blur" effect */
+    opacity: 0.4;
+    animation: drift 20s infinite alternate;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: #4F46E5;
+    /* Indigo */
+    top: -100px;
+    left: -100px;
+}
+
+.orb-2 {
+    width: 300px;
+    height: 300px;
+    background: #7C3AED;
+    /* Violet */
+    bottom: -50px;
+    right: -50px;
+    animation-delay: -5s;
+}
+
+@keyframes drift {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(30px, 50px);
+    }
+}
+
+/* The Glass Card */
+.glass-card {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    /* Increased from 420px */
+    padding: 80px 50px 50px 50px;
+    /* Increased padding */
+
+    /* Glass Effect */
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    /* Increased blur */
+    -webkit-backdrop-filter: blur(20px);
+
+    /* Border & Shadow */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 32px;
+    /* Increased radius */
+    box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.6);
+    /* Deeper shadow */
+
+    text-align: center;
+    color: white;
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.glass-card.fade-out {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+}
+
+/* The Overlapping Avatar */
+.connector-avatar {
+    width: 100px;
+    /* Increased from 80px */
+    height: 100px;
+    border-radius: 50%;
+
+    /* Positioning logic */
+    position: absolute;
+    top: -50px;
+    /* Adjusted for new size */
+    left: 50%;
+    transform: translateX(-50%);
+
+    /* The "Cutout" effect */
+    border: 4px solid #0F0F12;
+    /* Must match the background color of the page */
+    object-fit: cover;
+    z-index: 10;
 }

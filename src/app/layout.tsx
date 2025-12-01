@@ -26,23 +26,31 @@ export default function RootLayout({
       <body
         className={cn(
           outfit.variable,
-          "font-sans antialiased bg-background text-foreground min-h-screen flex"
+          "font-sans antialiased bg-background text-foreground min-h-screen flex relative overflow-x-hidden"
         )}
       >
-        <ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <HubProvider>
-              <SidebarWrapper />
-              <LayoutContent>{children}</LayoutContent>
-            </HubProvider>
-            <Toaster />
-          </ThemeProvider>
-        </ClerkProvider>
+        {/* Global Background Orbs */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          <div className="network-orb orb-1" />
+          <div className="network-orb orb-2" />
+        </div>
+
+        <div className="relative z-10 flex-1 flex">
+          <ClerkProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <HubProvider>
+                <SidebarWrapper />
+                <LayoutContent>{children}</LayoutContent>
+              </HubProvider>
+              <Toaster />
+            </ThemeProvider>
+          </ClerkProvider>
+        </div>
       </body>
     </html>
   );

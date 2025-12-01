@@ -27,18 +27,18 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
     // Manual smooth scroll function - always scrolls when input is focused/clicked
     const scrollIntoViewSmooth = React.useCallback((element: HTMLElement | null) => {
         if (!element || typeof window === 'undefined') return;
-        
+
         const performScroll = () => {
             try {
                 // Check if element still exists and is in DOM
                 if (!element || !document.body || !document.body.contains(element)) {
                     return;
                 }
-                
+
                 // Use native scrollIntoView for reliability
                 if (element.scrollIntoView) {
-                    element.scrollIntoView({ 
-                        behavior: 'smooth', 
+                    element.scrollIntoView({
+                        behavior: 'smooth',
                         block: 'center',
                         inline: 'nearest'
                     });
@@ -48,7 +48,7 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
                 console.debug('Scroll failed:', error);
             }
         };
-        
+
         // Use double RAF and setTimeout to ensure it runs after browser's default behavior
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -85,8 +85,8 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
             const mimeType = MediaRecorder.isTypeSupported("audio/webm")
                 ? "audio/webm"
                 : MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-                ? "audio/webm;codecs=opus"
-                : ""
+                    ? "audio/webm;codecs=opus"
+                    : ""
 
             const mediaRecorder = new MediaRecorder(stream, {
                 mimeType: mimeType || undefined,
@@ -147,7 +147,7 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
 
                 const result = await transcribeAudio(audioBlob, token, sessionId)
                 setValue(result.text)
-                
+
                 // Focus the textarea after transcription
                 if (textareaRef.current) {
                     textareaRef.current.focus()
@@ -183,11 +183,11 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
 
     return (
         <div className={cn("relative w-full max-w-3xl mx-auto group", className)}>
-            <div 
+            <div
                 ref={containerRef}
                 id="search-input-container"
-                className="relative flex flex-col w-full p-4 bg-card border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
-                style={{ 
+                className="relative flex flex-col w-full p-6 bg-card border border-border/50 rounded-2xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50 min-h-[120px]"
+                style={{
                     willChange: 'border-color, box-shadow',
                     transform: 'translateZ(0)',
                     backfaceVisibility: 'hidden',
@@ -225,56 +225,66 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
                             scrollIntoViewSmooth(textareaRef.current);
                         }
                     }}
-                    placeholder="Ask anything..."
-                    className="w-full min-h-[60px] max-h-[200px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-lg placeholder:text-muted-foreground/70"
+                    placeholder="Describe the expert you wish you could talk to..."
+                    className="w-full min-h-[60px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-2xl md:text-3xl font-light placeholder:text-muted-foreground/40 text-center md:text-left leading-relaxed"
                     style={{ scrollMargin: '20px' }}
                     rows={1}
                     {...props}
                 />
 
-                <div className="flex justify-end items-center mt-2">
-                    <div className="flex gap-2 items-center">
-                        {isThinking && (
-                            <span className="text-xs text-muted-foreground animate-pulse mr-2">
-                                Thinking...
-                            </span>
-                        )}
-                        {isTranscribing && (
-                            <span className="text-xs text-muted-foreground animate-pulse mr-2">
-                                Transcribing...
-                            </span>
-                        )}
-                        {isRecording ? (
+                <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                    {isThinking && (
+                        <span className="text-xs text-muted-foreground animate-pulse mr-2">
+                            Thinking...
+                        </span>
+                    )}
+                    {isTranscribing && (
+                        <span className="text-xs text-muted-foreground animate-pulse mr-2">
+                            Transcribing...
+                        </span>
+                    )}
+                    {isRecording ? (
+                        <Button
+                            size="sm"
+                            className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-200 px-4"
+                            onClick={stopRecording}
+                        >
+                            <div className="h-2 w-2 rounded-full bg-white animate-pulse mr-2" />
+                            Stop
+                        </Button>
+                    ) : value.trim().length > 5 ? (
+                        <Button
+                            size="sm"
+                            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 px-6 font-medium"
+                            onClick={() => {
+                                onSearch(value)
+                                setValue("") // Clear input after opening overlay
+                            }}
+                            disabled={isThinking || isTranscribing}
+                        >
+                            Find People
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    ) : (
+                        <div className="flex gap-2">
                             <Button
                                 size="icon"
-                                className="h-8 w-8 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-200"
-                                onClick={stopRecording}
-                            >
-                                <div className="h-3 w-3 rounded-full bg-white animate-pulse" />
-                            </Button>
-                        ) : value.trim() ? (
-                            <Button
-                                size="icon"
-                                className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
-                                onClick={() => {
-                                    onSearch(value)
-                                    setValue("") // Clear input after opening overlay
-                                }}
-                                disabled={isThinking || isTranscribing}
-                            >
-                                <ArrowRight className="h-4 w-4" />
-                            </Button>
-                        ) : (
-                            <Button
-                                size="icon"
-                                className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+                                variant="ghost"
+                                className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted"
                                 onClick={startRecording}
                                 disabled={isThinking || isTranscribing}
                             >
-                                <Mic className="h-4 w-4" />
+                                <Mic className="h-5 w-5" />
                             </Button>
-                        )}
-                    </div>
+                            <Button
+                                size="sm"
+                                className="rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-all duration-200 px-6 font-medium cursor-not-allowed"
+                                disabled
+                            >
+                                Find People
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
