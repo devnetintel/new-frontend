@@ -538,10 +538,10 @@ export function VoiceDiscoveryInline({
                                     "rounded-2xl px-5 py-4 leading-relaxed",
                                     message.role === "user"
                                       ? "bg-primary text-primary-foreground"
-                                      : "bg-muted"
+                                      : "bg-transparent"
                                   )}
                                 >
-                                  <p className="text-base">{message.content}</p>
+                                  <p className="text-base text-foreground">{message.content}</p>
                                 </div>
                               </div>
                             </div>
@@ -589,7 +589,7 @@ export function VoiceDiscoveryInline({
                       </h3>
 
                       <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl blur-sm" />
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl" />
                         <div className="relative bg-card border-2 border-primary/30 rounded-xl p-8">
                           <Sparkles className="h-6 w-6 text-primary mb-4" />
 
@@ -726,10 +726,10 @@ export function VoiceDiscoveryInline({
                               "rounded-2xl px-5 py-4 leading-relaxed",
                               message.role === "user"
                                 ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
+                                : "bg-transparent"
                             )}
                           >
-                            <p className="text-base">{message.content}</p>
+                            <p className="text-base text-foreground">{message.content}</p>
                           </div>
                         </div>
                       </div>
@@ -777,7 +777,7 @@ export function VoiceDiscoveryInline({
                 </h3>
 
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl blur-sm" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl" />
                   <div className="relative bg-card border-2 border-primary/30 rounded-xl p-8">
                     <Sparkles className="h-6 w-6 text-primary mb-4" />
 

@@ -74,33 +74,33 @@
     }
 
     .dark {
-        --background: 220 2% 10%;
+        --background: 240 15.2% 8%;
         --foreground: 0 0% 95%;
 
-        --card: 220 2% 12%;
+        --card: 270 10% 6%;
         --card-foreground: 0 0% 95%;
 
-        --popover: 220 2% 12%;
+        --popover: 270 10% 6%;
         --popover-foreground: 0 0% 95%;
 
-        --primary: 180 70% 40%;
+        --primary: 266.4 80.8% 51.0%;
         --primary-foreground: 0 0% 100%;
 
-        --secondary: 220 2% 18%;
+        --secondary: 266.5 81.9% 34.7%;
         --secondary-foreground: 0 0% 95%;
 
-        --muted: 220 2% 18%;
+        --muted: 266.5 81.9% 34.7%;
         --muted-foreground: 220 5% 60%;
 
-        --accent: 220 2% 18%;
+        --accent: 266.5 81.9% 34.7%;
         --accent-foreground: 0 0% 95%;
 
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 0 0% 98%;
 
-        --border: 220 2% 18%;
-        --input: 220 2% 18%;
-        --ring: 180 70% 40%;
+        --border: 266.5 81.9% 34.7%;
+        --input: 266.5 81.9% 34.7%;
+        --ring: 266.4 80.8% 51.0%;
     }
 
     * {
@@ -436,5 +436,45 @@
             transparent 60%
         );
     }
+}
 
+/* Module A: "The Velvet Rope" Entry Styles */
+
+/* The "Network" Orbs - animated blurred blobs in background */
+.network-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    /* The "Network Blur" effect */
+    opacity: 0.4;
+    animation: drift 20s infinite alternate;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    background: #4F46E5;
+    /* Indigo */
+    top: -100px;
+    left: -100px;
+}
+
+.orb-2 {
+    width: 300px;
+    height: 300px;
+    background: #7C3AED;
+    /* Violet */
+    bottom: -50px;
+    right: -50px;
+    animation-delay: -5s;
+}
+
+@keyframes drift {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    100% {
+        transform: translate(30px, 50px);
+    }
 }

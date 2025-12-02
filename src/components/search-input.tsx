@@ -251,7 +251,7 @@ export function SearchInput({
       <div
         ref={containerRef}
         id="search-input-container"
-        className="relative flex flex-col w-full p-3 bg-background border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
+        className="relative flex flex-col w-full p-4 bg-card border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
         style={{
           scrollMargin: isInChatSection ? "0px" : "5px",
         }}
@@ -307,7 +307,10 @@ export function SearchInput({
           {!String(value || "").trim() && (
             <div className="absolute top-0 left-0 pointer-events-none z-0 flex items-center ">
               <ShinyText
-                text={placeholder || "Ask anything..."}
+                text={
+                  placeholder ||
+                  "Describe the expert you wish you could talk to..."
+                }
                 speed={3}
                 className="text-lg"
               />
@@ -353,6 +356,7 @@ export function SearchInput({
                 </div>
               )}
             </div>
+            {/* Mic button - always visible unless recording */}
             {isRecording ? (
               <Button
                 size="icon"
@@ -361,10 +365,22 @@ export function SearchInput({
               >
                 <div className="h-3 w-3 rounded-full bg-white animate-pulse" />
               </Button>
-            ) : String(value).trim() ? (
+            ) : (
               <Button
                 size="icon"
-                className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
+                variant="ghost"
+                className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted"
+                onClick={startRecording}
+                disabled={isThinking || isTranscribing}
+              >
+                <Mic className="h-5 w-5" />
+              </Button>
+            )}
+            {/* Find People button - separate button for sending */}
+            {String(value).trim() ? (
+              <Button
+                size="sm"
+                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 px-6 font-medium"
                 onClick={() => {
                   onSearch(String(value));
                   if (!isControlled) {
@@ -373,16 +389,16 @@ export function SearchInput({
                 }}
                 disabled={isThinking || isTranscribing}
               >
-                <ArrowRight className="h-5 w-5" />
+                Find People
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
               <Button
-                size="icon"
-                className="h-10 w-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200"
-                onClick={startRecording}
-                disabled={isThinking || isTranscribing}
+                size="sm"
+                className="rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-all duration-200 px-6 font-medium cursor-not-allowed"
+                disabled
               >
-                <Mic className="h-5 w-5" />
+                Find People
               </Button>
             )}
           </div>
