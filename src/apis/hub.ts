@@ -257,7 +257,7 @@ export async function declineHubRequest(
     throw new Error("Authentication required. Please sign in.");
   }
 
-  const url = `${API_BASE}/api/intro-requests/${requestId}/decline?token=${approvalToken}`;
+  const url = `${API_BASE}/api/intro-requests/${requestId}/pass?token=${approvalToken}`;
   console.log("Making decline API call to:", url);
 
   const response = await fetch(url, {
