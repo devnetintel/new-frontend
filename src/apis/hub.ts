@@ -199,9 +199,14 @@ export async function fetchHubRequestsHistory(
 
 /**
  * Approve an introduction request (H1 approval)
+ * @param token - JWT authentication token
+ * @param requestId - The request ID (numeric)
+ * @param approvalToken - The approval token from the request
+ * @param h1Note - Optional note from H1 to S2
  */
 export async function approveHubRequest(
   token: string,
+  requestId: number | string,
   approvalToken: string,
   h1Note?: string
 ): Promise<{ success: boolean; message?: string }> {
@@ -209,19 +214,19 @@ export async function approveHubRequest(
     throw new Error("Authentication required. Please sign in.");
   }
 
-  const response = await fetch(
-    `${API_BASE}/api/intro-requests/h1-approve?token=${approvalToken}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        h1_note: h1Note || null,
-      }),
-    }
-  );
+  const url = `${API_BASE}/api/intro-requests/${requestId}/approve?token=${approvalToken}`;
+  console.log("Making approval API call to:", url);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      h1_note: h1Note || null,
+    }),
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -239,25 +244,29 @@ export async function approveHubRequest(
 
 /**
  * Decline an introduction request (H1 decline)
+ * @param token - JWT authentication token
+ * @param requestId - The request ID (numeric)
+ * @param approvalToken - The approval token from the request
  */
 export async function declineHubRequest(
   token: string,
+  requestId: number | string,
   approvalToken: string
 ): Promise<{ success: boolean; message?: string }> {
   if (!token) {
     throw new Error("Authentication required. Please sign in.");
   }
 
-  const response = await fetch(
-    `${API_BASE}/api/intro-requests/h1-decline?token=${approvalToken}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const url = `${API_BASE}/api/intro-requests/${requestId}/decline?token=${approvalToken}`;
+  console.log("Making decline API call to:", url);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -272,4 +281,3 @@ export async function declineHubRequest(
   const data = await response.json();
   return data;
 }
-

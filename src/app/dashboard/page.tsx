@@ -300,7 +300,7 @@ export default function Dashboard() {
         }));
       }
 
-      await declineHubRequest(token, request.approval_token);
+      await declineHubRequest(token, request.id, request.approval_token);
 
       toast.success("Request declined", {
         description: "We've notified the requester.",
@@ -320,12 +320,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleSendIntro = async (
-    id: string,
-    note: string,
-    context: string,
-    subject: string
-  ) => {
+  const handleSendIntro = async (id: string, note: string, context: string) => {
     const request = hubRequests.find((r) => r.id === id);
     if (!request || !request.approval_token) {
       toast.error("Unable to approve request. Missing approval token.");
@@ -351,7 +346,7 @@ export default function Dashboard() {
         }));
       }
 
-      await approveHubRequest(token, request.approval_token, note);
+      await approveHubRequest(token, request.id, request.approval_token, note);
 
       toast.success("Sent! You're awesome.", {
         description: "Intro email sent to target.",
