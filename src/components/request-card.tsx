@@ -41,10 +41,10 @@ export function RequestCard({
       <CardContent className="p-4 md:p-5">
         <div className="flex flex-col md:flex-row gap-4 md:items-start">
           {/* Left: Requester & Target Info */}
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-3">
+          <div className="flex-1 space-y-4 min-w-0">
+            <div className="flex items-start gap-2 md:gap-3">
               {/* Requester */}
-              <div className="flex items-center gap-2 min-w-0 max-w-[45%]">
+              <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-300 font-medium text-xs shrink-0">
                   {request.requester.name.substring(0, 2).toUpperCase()}
                 </div>
@@ -53,23 +53,23 @@ export function RequestCard({
                     {request.requester.name}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {request.requester.headline}
+                    {request.requester.headline || "Professional"}
                   </div>
                 </div>
               </div>
 
-              <div className="text-muted-foreground text-xs px-1">→</div>
+              <div className="text-muted-foreground text-xs px-1 shrink-0 mt-1">→</div>
 
               {/* Target */}
-              <div className="flex items-center gap-2 min-w-0 max-w-[45%]">
-                <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-700 dark:text-purple-300 font-medium text-xs shrink-0">
+              <div className="flex items-start gap-2 min-w-0 flex-1">
+                <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-700 dark:text-purple-300 font-medium text-xs shrink-0 mt-0.5">
                   {request.target.name.substring(0, 2).toUpperCase()}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="font-semibold text-sm truncate">
                     {request.target.name}
                   </div>
-                  <div className="text-xs text-muted-foreground truncate">
+                  <div className="text-xs text-muted-foreground line-clamp-2 break-words">
                     {request.target.headline}
                   </div>
                 </div>
