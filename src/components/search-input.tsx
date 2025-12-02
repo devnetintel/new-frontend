@@ -251,7 +251,7 @@ export function SearchInput({
       <div
         ref={containerRef}
         id="search-input-container"
-        className="relative flex flex-col w-full p-4 bg-card border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
+        className="relative flex flex-col w-full p-4 bg-card/40 backdrop-blur-sm border border-border/50 rounded-xl shadow-sm transition-[border-color,box-shadow] duration-200 focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-0 focus-within:border-primary/50"
         style={{
           scrollMargin: isInChatSection ? "0px" : "5px",
         }}
