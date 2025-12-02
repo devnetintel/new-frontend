@@ -16,6 +16,11 @@ const API_BASE =
 export function captureReferralFromUrl() {
   if (typeof window === "undefined") return null;
 
+  // Don't capture workspace referrals on results page
+  if (window.location.pathname.startsWith("/results")) {
+    return null;
+  }
+
   // First, try to get from the original pathname header (set by middleware)
   // This works even if Next.js rewrote the URL
   let workspaceId: string | null = null;
@@ -42,6 +47,7 @@ export function captureReferralFromUrl() {
     "api",
     "search",
     "join",
+    "results",
   ];
 
   if (

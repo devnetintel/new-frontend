@@ -15,7 +15,8 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Connection } from "@/types"
 import { submitIntroRequest } from "@/services"
 import { toast } from "sonner"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface IntroRequestModalProps {
     isOpen: boolean
@@ -35,24 +36,44 @@ export function IntroRequestModal({
     const { getToken } = useAuth()
     const [message, setMessage] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false)
     const [submitStatus, setSubmitStatus] = useState<
         "idle" | "success" | "error"
     >("idle")
     const [errorMessage, setErrorMessage] = useState("")
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-
-    // Initialize message when modal opens or profile changes
+    // Reset state when modal opens or profile changes
     useEffect(() => {
         if (isOpen && profile) {
-            // Use s1_message if available, otherwise use a default template
-            const defaultMessage = profile.s1_message || 
-                `Hi, I saw that you know ${profile.name}. ${profile.reason ? `Based on ${profile.reason.substring(0, 100)}... ` : ""}I'd love to connect with them. Could you introduce us?`
-            setMessage(defaultMessage)
+            setMessage("")
             setSubmitStatus("idle")
             setErrorMessage("")
+            setIsGeneratingAI(false)
         }
     }, [isOpen, profile])
+
+    const handleAiDraft = async () => {
+        if (!profile) return
+        
+        setIsGeneratingAI(true)
+        setMessage("") // Clear existing
+
+        // Use s1_message from API if available, otherwise generate a default
+        const draftText = profile.s1_message || 
+            `Hi ${workspaceName || "there"}, I'd love an introduction to ${profile.name}. ${profile.reason ? `Based on ${profile.reason.substring(0, 150)}... ` : ""}I think they could really help me. Could you connect us?`
+
+        // Typewriter effect
+        let i = 0
+        const interval = setInterval(() => {
+            setMessage((prev) => prev + draftText.charAt(i))
+            i++
+            if (i >= draftText.length) {
+                clearInterval(interval)
+                setIsGeneratingAI(false)
+            }
+        }, 15) // Fast typing
+    }
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -134,99 +155,106 @@ export function IntroRequestModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-[90vw] sm:max-w-[500px] p-4 sm:p-6 rounded-xl">
-                <DialogHeader className="pb-2 sm:pb-4">
-                    <DialogTitle className="text-lg sm:text-xl">Request Intro to {profile.name}</DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
-                        {workspaceName
-                            ? `Ask ${workspaceName} to introduce you. The message is pre-filled based on your search context.`
-                            : "Request an introduction. The message is pre-filled based on your search context."}
+            <DialogContent className="max-w-[90vw] sm:max-w-[500px] p-0 overflow-hidden rounded-2xl gap-0">
+                {/* Header */}
+                <div className="p-6 pb-4 bg-muted/30 border-b border-border/50">
+                    <DialogTitle className="text-xl font-semibold">
+                        Request Intro to {profile.name}
+                    </DialogTitle>
+                    <DialogDescription className="mt-1 text-sm text-muted-foreground">
+                        Request an introduction. The message is pre-filled based on your search context.
                     </DialogDescription>
-                </DialogHeader>
+                </div>
 
-                {/* Success State */}
-                {submitStatus === "success" && (
-                    <div className="rounded-lg sm:rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
-                        <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
-                        <div>
-                            <h3 className="font-semibold text-sm sm:text-base text-green-900 dark:text-green-100">
-                                Request Sent!
-                            </h3>
-                            <p className="text-xs sm:text-sm text-green-800 dark:text-green-200 mt-1">
-                                The network owner has been notified and will facilitate
-                                the introduction.
+                <div className="p-6 space-y-6">
+                    {/* Success State */}
+                    {submitStatus === "success" ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in-95">
+                            <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
+                                <CheckCircle2 className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground">Request Sent!</h3>
+                            <p className="text-muted-foreground mt-2 max-w-xs">
+                                {workspaceName || "The network owner"} has been notified and will facilitate the introduction.
                             </p>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <form onSubmit={handleSend} className="space-y-6">
+                            {/* Message Input */}
+                            <div className="space-y-2 relative">
+                                <div className="flex items-center justify-between">
+                                    <label
+                                        htmlFor="message"
+                                        className="block text-sm font-medium"
+                                    >
+                                        Why do you want to connect?{" "}
+                                        <span className="text-red-500">*</span>
+                                    </label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleAiDraft}
+                                        disabled={isGeneratingAI || message.length > 10}
+                                        className={cn(
+                                            "h-7 text-xs gap-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/50 transition-all",
+                                            isGeneratingAI && "animate-pulse"
+                                        )}
+                                    >
+                                        <Sparkles className="h-3 w-3" />
+                                        {isGeneratingAI ? "Drafting..." : "Draft with AI"}
+                                    </Button>
+                                </div>
+                                <Textarea
+                                    ref={textareaRef}
+                                    id="message"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    className="min-h-[120px] resize-none bg-muted/30"
+                                    placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
+                                    disabled={isSubmitting || isGeneratingAI}
+                                    required
+                                />
+                                <p className="text-[11px] text-muted-foreground">
+                                    Minimum 10 characters • {message.length} characters
+                                </p>
+                            </div>
 
-                {/* Error State */}
-                {submitStatus === "error" && (
-                    <div className="rounded-lg sm:rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
-                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
-                        <div>
-                            <h3 className="font-semibold text-sm sm:text-base text-red-900 dark:text-red-100">
-                                Failed to Send
-                            </h3>
-                            <p className="text-xs sm:text-sm text-red-800 dark:text-red-200 mt-1">
-                                {errorMessage}
-                            </p>
-                        </div>
-                    </div>
-                )}
+                            {/* Error State */}
+                            {submitStatus === "error" && errorMessage && (
+                                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                                    <AlertCircle className="h-4 w-4" />
+                                    {errorMessage}
+                                </div>
+                            )}
 
-                <form onSubmit={handleSend}>
-                    <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
-                        <div>
-                            <label
-                                htmlFor="message"
-                                className="block text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2"
-                            >
-                                Why do you want to connect?{" "}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <Textarea
-                                ref={textareaRef}
-                                id="message"
-                                value={message}
-                                onChange={(e) => setMessage(e.target.value)}
-                                className="h-24 sm:h-32 text-sm"
-                                style={{ scrollMargin: '5px' }}
-                                placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
-                                disabled={isSubmitting || submitStatus === "success"}
-                                required
-                            />
-                            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">
-                                Minimum 10 characters • {message.length} characters
-                            </p>
-                        </div>
-                    </div>
-                    <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
-                        <Button
-                            type="submit"
-                            disabled={
-                                isSubmitting ||
-                                submitStatus === "success" ||
-                                message.trim().length < 10
-                            }
-                            className="w-full sm:w-auto text-sm sm:text-base"
-                        >
-                            {isSubmitting
-                                ? "Sending..."
-                                : submitStatus === "success"
-                                ? "Sent!"
-                                : "Send Request"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={onClose}
-                            disabled={isSubmitting}
-                            className="w-full sm:w-auto text-sm sm:text-base"
-                        >
-                            Cancel
-                        </Button>
-                    </DialogFooter>
-                </form>
+                            {/* Footer */}
+                            <div className="flex gap-3 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex-1"
+                                    onClick={onClose}
+                                    disabled={isSubmitting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    className="flex-1 bg-primary hover:bg-primary/90"
+                                    disabled={
+                                        isSubmitting ||
+                                        message.trim().length < 10
+                                    }
+                                >
+                                    {isSubmitting
+                                        ? "Sending..."
+                                        : "Send Request"}
+                                </Button>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </DialogContent>
         </Dialog>
     )

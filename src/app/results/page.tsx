@@ -159,7 +159,17 @@ function ResultsPageContent() {
   };
 
   const handleClarification = (option: string) => {
-    performSearch(option, workspaceIds, sessionId);
+    // Update URL with new query and trigger search
+    const params = new URLSearchParams({
+      q: option,
+      workspaces: workspaceIds.join(","),
+    });
+
+    if (sessionId) {
+      params.set("sessionId", sessionId);
+    }
+
+    router.push(`/results?${params.toString()}`);
   };
 
   const handleConnect = (profileId: string) => {
@@ -179,7 +189,7 @@ function ResultsPageContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen p-4 md:p-8 max-w-9xl mx-auto">
+    <div className="flex flex-col min-h-screen p-4 md:p-6 lg:p-8 w-full">
       {/* Back Button */}
       <Button
         variant="ghost"
@@ -191,7 +201,7 @@ function ResultsPageContent() {
         <span className="hidden sm:inline">Back</span>
       </Button>
 
-      <div className="max-w-8xl mx-auto space-y-8">
+      <div className="w-full space-y-8">
         {isThinking ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-6">
             <div className="relative">
@@ -250,7 +260,7 @@ function ResultsPageContent() {
               </span>
               <div className="h-px flex-1 bg-border/50" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {results.map((profile) => (
                 <ProfileCard
                   key={profile.id}
@@ -295,14 +305,16 @@ function ResultsPageContent() {
 
 export default function ResultsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <ResultsPageContent />
     </Suspense>
   );

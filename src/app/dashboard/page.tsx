@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { UserMenu } from "@/components/user-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -145,16 +144,10 @@ export default function Dashboard() {
     }
   }, [isLoaded, isSignedIn, user?.id, getToken]);
 
-  // Fetch spoke requests (My Requests) - only if user is not a hub user
+  // Fetch my requests (for both hub and spoke users)
   useEffect(() => {
     const loadRequests = async () => {
       if (!isSignedIn || !user?.id) {
-        setIsLoadingRequests(false);
-        return;
-      }
-
-      // Only fetch if user is not a hub user
-      if (isHubUser) {
         setIsLoadingRequests(false);
         return;
       }
@@ -186,7 +179,7 @@ export default function Dashboard() {
     if (isLoaded && isSignedIn) {
       loadRequests();
     }
-  }, [isLoaded, isSignedIn, user?.id, getToken, isHubUser]);
+  }, [isLoaded, isSignedIn, user?.id, getToken]);
 
   if (!isLoaded || !isSignedIn) {
     return null;
@@ -373,7 +366,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="w-full max-w-6xl mx-auto px-3 md:px-6 py-3 md:py-6 space-y-6 md:space-y-10 box-border min-w-0">
+      <div className="w-full max-w-6xl mx-auto px-2 md:px-6 py-3 md:py-6 space-y-6 md:space-y-10 box-border min-w-0">
         <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-0 border-b border-border/40 pb-4 md:pb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-0.5 md:mb-1">
@@ -394,7 +387,6 @@ export default function Dashboard() {
                 <span className="sm:hidden">Search</span>
               </Button>
             </Link>
-            <UserMenu afterSignOutUrl="/sign-in" />
           </div>
         </header>
 
@@ -441,9 +433,9 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* SPOKE VIEW: My Requests - Only show if NOT hub user or hub user mode is disabled */}
-        {!showHubUI && (
-          <section className="space-y-3 md:space-y-4 pt-2 md:pt-4 w-full box-border">
+        {/* My Requests - Show for both hub and spoke users */}
+        <section className="rounded-xl md:rounded-2xl bg-muted/30 p-3 md:p-6 border border-border/40 w-full box-border">
+          <div className="space-y-3 md:space-y-4">
             <h2 className="text-lg md:text-xl font-semibold flex items-center gap-1.5 md:gap-2">
               <Clock className="h-4 w-4 md:h-5 md:w-5 text-primary" />
               My Requests
@@ -499,55 +491,63 @@ export default function Dashboard() {
                     return (
                       <Card
                         key={request.id}
-                        className="hover:bg-muted/20 transition-colors border-border/50 w-full box-border cursor-pointer"
+                        className="group hover:shadow-md transition-all duration-200 border-border/50 bg-background w-full box-border cursor-pointer"
                         onClick={() =>
                           setExpandedRequestId(isExpanded ? null : request.id)
                         }
                       >
-                        <CardContent className="p-3 md:p-4 flex flex-col gap-3 w-full box-border">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-                              <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-muted flex items-center justify-center text-xs md:text-sm font-medium flex-shrink-0">
-                                {request.target.picture_url ? (
-                                  <img
-                                    src={request.target.picture_url}
-                                    alt={request.target.name}
-                                    className="h-8 w-8 md:h-10 md:w-10 rounded-full object-cover"
-                                  />
-                                ) : (
-                                  initials
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 overflow-hidden">
-                                <h3 className="font-medium text-sm md:text-base truncate">
-                                  {request.target.name}
-                                </h3>
-                                <p className="text-xs md:text-sm text-muted-foreground truncate">
-                                  {titleCompany || "Professional"}
-                                </p>
-                                <p className="text-[10px] md:text-xs text-muted-foreground/70 mt-0.5 truncate">
-                                  via {request.workspace.owner_name}&apos;s
-                                  Network • {timeAgo}
-                                </p>
-                              </div>
+                        <CardContent className="p-4 md:p-5 flex flex-col gap-3 w-full box-border">
+                          <div className="flex items-start gap-3 w-full">
+                            <div className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-muted flex items-center justify-center text-sm md:text-base font-medium shrink-0">
+                              {request.target.picture_url ? (
+                                <img
+                                  src={request.target.picture_url}
+                                  alt={request.target.name}
+                                  className="h-12 w-12 md:h-14 md:w-14 rounded-full object-cover"
+                                />
+                              ) : (
+                                initials
+                              )}
                             </div>
-
-                            <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-end">
-                              <Badge
-                                variant={statusBadge.variant}
-                                className={`${statusBadge.className} text-[10px] md:text-xs px-2 md:px-2.5 py-0.5 whitespace-nowrap`}
-                              >
-                                {statusBadge.icon}
-                                <span className="whitespace-nowrap">
-                                  {statusBadge.label}
+                            <div className="flex-1 min-w-0 flex flex-col gap-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-base md:text-lg leading-tight">
+                                    {request.target.name}
+                                  </h3>
+                                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5 line-clamp-2">
+                                    {titleCompany || "Professional"}
+                                  </p>
+                                </div>
+                                <div className="shrink-0">
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-1">
+                                <p className="text-[11px] md:text-xs text-muted-foreground/70">
+                                  via {hubFirstName}&apos;s Network
+                                </p>
+                                <span className="hidden sm:inline text-muted-foreground/50">
+                                  •
                                 </span>
-                              </Badge>
-                              <div className="ml-auto sm:ml-0">
-                                {isExpanded ? (
-                                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                )}
+                                <p className="text-[11px] md:text-xs text-muted-foreground/70">
+                                  {timeAgo}
+                                </p>
+                              </div>
+                              <div className="mt-1.5">
+                                <Badge
+                                  variant={statusBadge.variant}
+                                  className={`${statusBadge.className} text-[10px] md:text-xs px-2 py-0.5 shrink-0`}
+                                >
+                                  {statusBadge.icon}
+                                  <span className="whitespace-nowrap">
+                                    {statusBadge.label}
+                                  </span>
+                                </Badge>
                               </div>
                             </div>
                           </div>
@@ -690,8 +690,8 @@ export default function Dashboard() {
                 )}
               </div>
             )}
-          </section>
-        )}
+          </div>
+        </section>
       </div>
       {/* Mobile Bottom Menu */}
       <MobileBottomMenu />

@@ -29,6 +29,8 @@ export interface Connection {
 export interface WorkspaceInfo {
   id: string;
   name: string;
+  owner_name?: string;
+  owner_picture_url?: string;
   profile_count: number;
   source: "link" | "admin";
 }

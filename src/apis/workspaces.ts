@@ -44,11 +44,14 @@ export async function fetchWorkspaces(
       workspace_id: string;
       name?: string;
       owner_name?: string;
+      owner_picture_url?: string;
       profile_count?: number;
       source?: string;
     }) => ({
       id: ws.workspace_id,
       name: ws.name || ws.owner_name || ws.workspace_id,
+      owner_name: ws.owner_name,
+      owner_picture_url: ws.owner_picture_url,
       profile_count: ws.profile_count || 0,
       source: (ws.source === "link" || ws.source === "admin"
         ? ws.source
