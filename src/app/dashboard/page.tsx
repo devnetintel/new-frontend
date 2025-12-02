@@ -196,9 +196,17 @@ export default function Dashboard() {
   const getTimeAgo = (timestamp: string | null) => {
     if (!timestamp) return "Unknown";
     try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+      // Check if it's already a formatted relative time string (from hub API)
+      // or an ISO date string (from spoke API)
+      const date = new Date(timestamp);
+      // If parsing fails or results in invalid date, assume it's already formatted
+      if (isNaN(date.getTime())) {
+        return timestamp;
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
     } catch {
-      return "Unknown";
+      // If parsing fails, assume it's already a formatted string
+      return timestamp || "Unknown";
     }
   };
 
