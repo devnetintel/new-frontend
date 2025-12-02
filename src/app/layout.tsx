@@ -27,9 +27,16 @@ export default function RootLayout({
       <body
         className={cn(
           outfit.variable,
-          "font-sans antialiased bg-background text-foreground min-h-screen flex"
+          "font-sans antialiased bg-background text-foreground min-h-screen flex relative overflow-x-hidden"
         )}
       >
+        {/* Global Background Orbs */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          <div className="network-orb orb-1" />
+          <div className="network-orb orb-2" />
+        </div>
+
+        <div className="relative z-10 flex-1 flex">
         <ClerkProvider>
           <ThemeProvider
             attribute="class"
@@ -60,6 +67,7 @@ export default function RootLayout({
             />
           </ThemeProvider>
         </ClerkProvider>
+        </div>
       </body>
     </html>
   );

@@ -53,7 +53,7 @@ export function Sidebar() {
                 className={cn(
                   "rounded-lg transition-all duration-200",
                   isActive
-                    ? "bg-primary/10 text-primary opacity-100 shadow-[0_0_10px_rgba(20,184,166,0.2)]"
+                    ? "bg-primary/10 text-primary opacity-100 shadow-[0_0_10px_rgba(118,29,231,0.2)]"
                     : "opacity-60 hover:opacity-100 hover:bg-muted"
                 )}
               >
