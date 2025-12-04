@@ -24,6 +24,7 @@ import { transcribeAudio } from "@/apis/transcribe";
 import { SearchInput } from "@/components/search-input";
 import { ShinyText } from "@/components/shiny-text";
 import { useChat } from "@/contexts/chat-context";
+import type { WorkspaceInfo } from "@/types";
 
 interface Message {
   role: "user" | "system";
@@ -36,7 +37,9 @@ interface VoiceDiscoveryInlineProps {
   onSearch: (finalQuery: string, sessionId?: string) => void;
   initialQuery?: string;
   selectedNetworks?: string[];
-  workspaces?: Array<{ id: string; name: string }>;
+  workspaces?: WorkspaceInfo[];
+  onToggleNetwork?: (workspaceId: string) => void;
+  onSelectAllNetworks?: () => void;
 }
 
 export function VoiceDiscoveryInline({
@@ -46,6 +49,8 @@ export function VoiceDiscoveryInline({
   initialQuery,
   selectedNetworks = [],
   workspaces = [],
+  onToggleNetwork,
+  onSelectAllNetworks,
 }: VoiceDiscoveryInlineProps) {
   const { getToken } = useAuth();
   const { setIsChatOpen } = useChat();
@@ -541,7 +546,9 @@ export function VoiceDiscoveryInline({
                                       : "bg-transparent"
                                   )}
                                 >
-                                  <p className="text-base text-foreground">{message.content}</p>
+                                  <p className="text-base text-foreground">
+                                    {message.content}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -644,6 +651,10 @@ export function VoiceDiscoveryInline({
                   sessionId={sessionId}
                   placeholder="Type your response..."
                   selectedNetworks={selectedWorkspaces}
+                  workspaces={workspaces}
+                  selectedWorkspaceIds={selectedNetworks}
+                  onToggleNetwork={onToggleNetwork}
+                  onSelectAllNetworks={onSelectAllNetworks}
                 />
               </div>
             )}
@@ -729,7 +740,9 @@ export function VoiceDiscoveryInline({
                                 : "bg-transparent"
                             )}
                           >
-                            <p className="text-base text-foreground">{message.content}</p>
+                            <p className="text-base text-foreground">
+                              {message.content}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -836,6 +849,10 @@ export function VoiceDiscoveryInline({
                 sessionId={sessionId}
                 placeholder="Type your response..."
                 selectedNetworks={selectedWorkspaces}
+                workspaces={workspaces}
+                selectedWorkspaceIds={selectedNetworks}
+                onToggleNetwork={onToggleNetwork}
+                onSelectAllNetworks={onSelectAllNetworks}
               />
             </div>
           </div>

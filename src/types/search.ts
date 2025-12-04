@@ -47,6 +47,7 @@ export interface BackendQueryResponse {
   response: string;
   success: boolean;
   profiles: BackendPerson[];
+  requester_has_linkedin?: boolean; // Whether the requester has a LinkedIn profile
   metadata: {
     session_id: string;
     execution_time: number;

@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
 import { transcribeAudio } from "@/apis/transcribe";
+import { NetworkFilter } from "@/components/network-filter";
+import type { WorkspaceInfo } from "@/types";
 
 interface SearchInputProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -20,6 +22,10 @@ interface SearchInputProps
     name: string;
     color: { bg: string; border: string; text: string };
   }>;
+  workspaces?: WorkspaceInfo[];
+  selectedWorkspaceIds?: string[];
+  onToggleNetwork?: (workspaceId: string) => void;
+  onSelectAllNetworks?: () => void;
 }
 
 export function SearchInput({
@@ -32,6 +38,10 @@ export function SearchInput({
   animateToBottom,
   onAnimationComplete,
   selectedNetworks,
+  workspaces = [],
+  selectedWorkspaceIds = [],
+  onToggleNetwork,
+  onSelectAllNetworks,
   placeholder,
   ...props
 }: SearchInputProps) {
@@ -403,6 +413,29 @@ export function SearchInput({
             )}
           </div>
         </div>
+
+        {/* Network Tabs with "Searching:" label - Only visible in chat section on laptop views (md breakpoint and above) */}
+        {isInChatSection &&
+          onToggleNetwork &&
+          onSelectAllNetworks &&
+          workspaces &&
+          workspaces.length > 0 && (
+            <div className="hidden md:block mt-3 pt-3 -mx-4 px-4 border-t border-border/50 relative z-10">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-sm text-muted-foreground whitespace-nowrap shrink-0">
+                  Searching:
+                </span>
+                <div className="flex-1 min-w-0">
+                  <NetworkFilter
+                    workspaces={workspaces}
+                    selectedIds={selectedWorkspaceIds || []}
+                    onToggle={onToggleNetwork}
+                    onSelectAll={onSelectAllNetworks}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );
