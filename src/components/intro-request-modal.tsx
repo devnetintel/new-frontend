@@ -12,6 +12,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import type { Connection } from "@/types"
 import { submitIntroRequest } from "@/services"
 import { toast } from "sonner"
@@ -24,6 +25,7 @@ interface IntroRequestModalProps {
     profile: Connection | null
     workspaceId?: string // Workspace ID from selected workspace
     workspaceName?: string // Optional workspace name for display
+    requesterHasLinkedIn?: boolean // Whether the requester has a LinkedIn profile
 }
 
 export function IntroRequestModal({
@@ -32,8 +34,10 @@ export function IntroRequestModal({
     profile,
     workspaceId,
     workspaceName,
+    requesterHasLinkedIn = false,
 }: IntroRequestModalProps) {
     const { getToken } = useAuth()
+    const [linkedinUrl, setLinkedinUrl] = useState("")
     const [message, setMessage] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isGeneratingAI, setIsGeneratingAI] = useState(false)
@@ -46,6 +50,7 @@ export function IntroRequestModal({
     // Reset state when modal opens or profile changes
     useEffect(() => {
         if (isOpen && profile) {
+            setLinkedinUrl("")
             setMessage("")
             setSubmitStatus("idle")
             setErrorMessage("")
@@ -79,6 +84,23 @@ export function IntroRequestModal({
         e.preventDefault()
 
         if (!profile) return
+
+        // Validate LinkedIn URL only if requester doesn't have LinkedIn
+        if (!requesterHasLinkedIn) {
+            if (!linkedinUrl.trim()) {
+                setSubmitStatus("error")
+                setErrorMessage("Please enter your LinkedIn URL.")
+                return
+            }
+
+            // Basic LinkedIn URL validation
+            const linkedinUrlPattern = /^https?:\/\/(www\.)?linkedin\.com\/in\/[\w-]+\/?$/
+            if (!linkedinUrlPattern.test(linkedinUrl.trim())) {
+                setSubmitStatus("error")
+                setErrorMessage("Please enter a valid LinkedIn URL (e.g., https://linkedin.com/in/yourname)")
+                return
+            }
+        }
 
         // Validate message
         if (message.trim().length < 10) {
@@ -116,6 +138,7 @@ export function IntroRequestModal({
                 user_message: message.trim(),
                 workspace_id: workspaceId,
                 urgency: "medium", // Default urgency
+                linkedin_url: requesterHasLinkedIn ? "" : linkedinUrl.trim(),
             })
 
             if (result.success) {
@@ -124,6 +147,7 @@ export function IntroRequestModal({
                 // Close modal after 2 seconds
                 setTimeout(() => {
                     onClose()
+                    setLinkedinUrl("")
                     setMessage("")
                     setSubmitStatus("idle")
                 }, 2000)
@@ -180,6 +204,32 @@ export function IntroRequestModal({
                         </div>
                     ) : (
                         <form onSubmit={handleSend} className="space-y-6">
+                            {/* LinkedIn URL Input - Only show if requester doesn't have LinkedIn */}
+                            {!requesterHasLinkedIn && (
+                                <div className="space-y-2">
+                                    <label
+                                        htmlFor="linkedin-url"
+                                        className="block text-sm font-medium"
+                                    >
+                                        LinkedIn URL{" "}
+                                        <span className="text-red-500">*</span>
+                                    </label>
+                                    <Input
+                                        id="linkedin-url"
+                                        type="url"
+                                        value={linkedinUrl}
+                                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                                        className="bg-muted/30"
+                                        placeholder="https://linkedin.com/in/yourname"
+                                        disabled={isSubmitting}
+                                        required
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Enter your LinkedIn profile URL
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Message Input */}
                             <div className="space-y-2 relative">
                                 <div className="flex items-center justify-between">
@@ -244,6 +294,7 @@ export function IntroRequestModal({
                                     className="flex-1 bg-primary hover:bg-primary/90"
                                     disabled={
                                         isSubmitting ||
+                                        (!requesterHasLinkedIn && !linkedinUrl.trim()) ||
                                         message.trim().length < 10
                                     }
                                 >

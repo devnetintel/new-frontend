@@ -10,6 +10,44 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 /**
+ * Clean up invalid workspace IDs from localStorage
+ */
+export function cleanupInvalidWorkspaceIds() {
+  if (typeof window === "undefined") return;
+
+  const pending = localStorage.getItem("pending_workspace");
+  if (!pending) return;
+
+  const excludedRoutes = [
+    "login",
+    "signup",
+    "sign-in",
+    "sign-up",
+    "admin",
+    "dashboard",
+    "api",
+    "search",
+    "join",
+    "results",
+    "result",
+    "home",
+    "index",
+    "",
+  ];
+
+  // Validate workspace ID format
+  const workspaceIdPattern = /^[a-zA-Z0-9_-]{2,}$/;
+  
+  if (
+    excludedRoutes.includes(pending.toLowerCase()) ||
+    !workspaceIdPattern.test(pending)
+  ) {
+    console.warn("Cleaning up invalid workspace ID from localStorage:", pending);
+    localStorage.removeItem("pending_workspace");
+  }
+}
+
+/**
  * 1. Call this on app init / page load
  * Captures referral workspace ID from URL path or query parameter
  */
@@ -48,6 +86,10 @@ export function captureReferralFromUrl() {
     "search",
     "join",
     "results",
+    "result",
+    "home",
+    "index",
+    "",
   ];
 
   if (
@@ -75,6 +117,36 @@ export async function processPendingWorkspace(
   const pending = localStorage.getItem("pending_workspace");
   if (!pending) return null;
 
+  // Validate workspace ID format - should be alphanumeric with underscores/hyphens, at least 2 chars
+  const workspaceIdPattern = /^[a-zA-Z0-9_-]{2,}$/;
+  if (!workspaceIdPattern.test(pending)) {
+    console.warn("Invalid workspace ID format, clearing:", pending);
+    localStorage.removeItem("pending_workspace");
+    return null;
+  }
+
+  // Double-check excluded routes
+  const excludedRoutes = [
+    "login",
+    "signup",
+    "sign-in",
+    "sign-up",
+    "admin",
+    "dashboard",
+    "api",
+    "search",
+    "join",
+    "results",
+    "result",
+    "home",
+    "index",
+  ];
+  if (excludedRoutes.includes(pending.toLowerCase())) {
+    console.warn("Workspace ID is in excluded routes, clearing:", pending);
+    localStorage.removeItem("pending_workspace");
+    return null;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/workspaces/auto-add`, {
       method: "POST",
@@ -87,11 +159,18 @@ export async function processPendingWorkspace(
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
+      const errorMessage = errorData.message || res.statusText || "Unknown error";
       console.error(
         "Failed to auto-add workspace:",
-        errorData.message || res.statusText
+        errorMessage
       );
-      // Don't remove from localStorage on error - user might retry
+      
+      // If it's a 404 or 400, the workspace doesn't exist - clear it
+      if (res.status === 404 || res.status === 400) {
+        console.warn("Workspace not found or invalid, clearing from localStorage");
+        localStorage.removeItem("pending_workspace");
+      }
+      // For other errors, keep it in localStorage so user can retry
       return null;
     }
 

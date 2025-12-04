@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { ProfileCard } from "@/components/profile-card";
 import { IntroRequestModal } from "@/components/intro-request-modal";
+import { ProfileDetailModal } from "@/components/profile-detail-modal";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -21,6 +22,8 @@ function ResultsPageContent() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasSearchedRef = useRef(false);
+  const searchKeyRef = useRef<string>("");
 
   const [isThinking, setIsThinking] = useState(true);
   const [thinkingStep, setThinkingStep] = useState(0);
@@ -29,6 +32,8 @@ function ResultsPageContent() {
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [detailModalIndex, setDetailModalIndex] = useState(0);
   const [query, setQuery] = useState("");
   const [originalQuery, setOriginalQuery] = useState("");
   const [workspaceIds, setWorkspaceIds] = useState<string[]>([]);
@@ -36,6 +41,8 @@ function ResultsPageContent() {
   const [isClarifying, setIsClarifying] = useState(false);
   const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([]);
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
+  const [requesterHasLinkedIn, setRequesterHasLinkedIn] =
+    useState<boolean>(false);
 
   const thinkingMessages = [
     "Analyzing request...",
@@ -60,6 +67,19 @@ function ResultsPageContent() {
       router.push("/");
       return;
     }
+
+    // Create a unique key for this search to prevent duplicate calls
+    const searchKey = `${queryParam}-${workspaceIdsParam}-${
+      sessionIdParam || ""
+    }`;
+
+    // Only perform search if we haven't searched with this exact key before
+    if (hasSearchedRef.current && searchKeyRef.current === searchKey) {
+      return;
+    }
+
+    searchKeyRef.current = searchKey;
+    hasSearchedRef.current = true;
 
     setQuery(queryParam);
     if (workspaceIdsParam) {
@@ -89,7 +109,8 @@ function ResultsPageContent() {
     setOriginalQuery("");
 
     try {
-      const token = await getToken();
+      // Get token
+      let token = await getToken();
       if (!token) {
         toast.error("Please sign in");
         setIsThinking(false);
@@ -113,12 +134,41 @@ function ResultsPageContent() {
       }
 
       // Call backend API
-      const result = await searchNetwork(
-        searchQuery,
-        token,
-        workspaceIdsArray,
-        sessionIdParam
-      );
+      let result;
+      try {
+        result = await searchNetwork(
+          searchQuery,
+          token,
+          workspaceIdsArray,
+          sessionIdParam
+        );
+      } catch (searchError) {
+        // If we get a 401, check if user is still signed in and try again
+        if (
+          searchError instanceof Error &&
+          searchError.message.includes("Authentication failed")
+        ) {
+          console.log("Token may be expired, checking authentication...");
+          // Check if user is still signed in
+          if (!isSignedIn) {
+            throw new Error("Authentication failed. Please sign in again.");
+          }
+          // Try getting token again (Clerk may refresh it)
+          token = await getToken();
+          if (!token) {
+            throw new Error("Authentication failed. Please sign in again.");
+          }
+          // Retry with new token
+          result = await searchNetwork(
+            searchQuery,
+            token,
+            workspaceIdsArray,
+            sessionIdParam
+          );
+        } else {
+          throw searchError;
+        }
+      }
 
       // Check if clarification is needed
       if (
@@ -142,6 +192,11 @@ function ResultsPageContent() {
         setOriginalQuery(result.metadata.filters.original_query);
       }
 
+      // Store requester_has_linkedin from API response
+      if (result.requester_has_linkedin !== undefined) {
+        setRequesterHasLinkedIn(result.requester_has_linkedin);
+      }
+
       if (connections.length === 0) {
         toast.info(
           "No matches found. Try a different query or select more networks."
@@ -151,14 +206,33 @@ function ResultsPageContent() {
       setIsThinking(false);
     } catch (error) {
       console.error("Search error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to search network"
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to search network";
+
+      // Handle authentication errors specifically
+      if (
+        error instanceof Error &&
+        errorMessage.includes("Authentication failed")
+      ) {
+        toast.error("Your session has expired. Please sign in again.");
+        setIsThinking(false);
+        // Redirect to home page after a short delay
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+        return;
+      }
+
+      toast.error(errorMessage);
       setIsThinking(false);
     }
   };
 
   const handleClarification = (option: string) => {
+    // Reset search tracking when starting a new search
+    hasSearchedRef.current = false;
+    searchKeyRef.current = "";
+
     // Update URL with new query and trigger search
     const params = new URLSearchParams({
       q: option,
@@ -260,12 +334,16 @@ function ResultsPageContent() {
               </span>
               <div className="h-px flex-1 bg-border/50" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {results.map((profile) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-10 xl:gap-8">
+              {results.map((profile, index) => (
                 <ProfileCard
                   key={profile.id}
                   profile={profile}
                   onConnect={() => handleConnect(profile.id)}
+                  onReadMore={(profile) => {
+                    setDetailModalIndex(index);
+                    setIsDetailModalOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -295,6 +373,22 @@ function ResultsPageContent() {
             ? workspaces.find((w) => w.id === workspaceIds[0])?.name
             : undefined
         }
+        requesterHasLinkedIn={requesterHasLinkedIn}
+      />
+
+      <ProfileDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        profiles={results}
+        initialIndex={detailModalIndex}
+        onRequestIntro={(profileId) => {
+          const profile = results.find((p) => p.id === profileId);
+          if (profile) {
+            setSelectedProfile(profile);
+            setIsDetailModalOpen(false);
+            setIsModalOpen(true);
+          }
+        }}
       />
 
       {/* Mobile Bottom Menu */}

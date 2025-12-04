@@ -14,6 +14,7 @@ import { GuardiansHeader } from "@/components/guardians-header";
 import {
   captureReferralFromUrl,
   processPendingWorkspace,
+  cleanupInvalidWorkspaceIds,
 } from "@/utils/workspaceReferral";
 import { fetchWorkspaces } from "@/apis/workspaces";
 import { WorkspaceInfo } from "@/types/connection";
@@ -105,6 +106,9 @@ function HomePageContent() {
   // Process pending workspace referral after user logs in
   useEffect(() => {
     const processReferral = async () => {
+      // Clean up any invalid workspace IDs first
+      cleanupInvalidWorkspaceIds();
+
       if (!user?.id || !isSignedIn) {
         console.log("⏳ Waiting for user authentication...");
         return;
@@ -274,6 +278,10 @@ function HomePageContent() {
               }}
               onFocus={() => setIsSpotlight(true)}
               onBlur={() => setIsSpotlight(false)}
+              workspaces={workspaces}
+              selectedWorkspaceIds={selectedWorkspaceIds}
+              onToggleNetwork={handleToggleNetwork}
+              onSelectAllNetworks={handleSelectAllNetworks}
               // placeholder is handled in component
             />
           </div>
@@ -312,6 +320,8 @@ function HomePageContent() {
           initialQuery={query}
           selectedNetworks={selectedWorkspaceIds}
           workspaces={workspaces}
+          onToggleNetwork={handleToggleNetwork}
+          onSelectAllNetworks={handleSelectAllNetworks}
         />
       )}
     </div>

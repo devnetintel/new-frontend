@@ -41,6 +41,7 @@ export async function submitIntroRequest(
       user_message: payload.user_message,
       workspace_id: payload.workspace_id,
       urgency: payload.urgency || "medium", // Default to medium if not provided
+      linkedin_url: payload.linkedin_url || "",
     }),
   });
 
