@@ -50,7 +50,7 @@ export interface SubmitIntroRequestPayload {
   user_message: string;
   workspace_id: string;
   urgency?: string; // Optional, defaults to "medium" on backend
-  linkedin_url: string; // User's LinkedIn URL
+  requester_linkedin_url: string; // User's LinkedIn URL
 }
 
 /**
@@ -73,4 +73,3 @@ export interface MyRequestsResponse {
   limit: number;
   offset: number;
 }
-
