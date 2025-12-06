@@ -15,15 +15,19 @@ import {
   ChevronLeft,
   Menu,
   X,
+  FileText,
+  Database,
+  Activity,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-type ViewType = "logs" | "database";
+type ViewType = "dashboard" | "logs" | "database";
 
 export function NewAdminDashboard() {
-  const [activeView, setActiveView] = useState<ViewType>("logs");
+  const [activeView, setActiveView] = useState<ViewType>("dashboard");
   const [searchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -75,6 +79,84 @@ export function NewAdminDashboard() {
   };
 
   const totalPages = Math.ceil(tableTotalCount / tableLimit);
+
+  // Show landing page when dashboard is selected
+  if (activeView === "dashboard") {
+    return (
+      <div className="min-h-screen w-full bg-background">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="mb-10">
+            <h1 className="text-4xl font-bold text-foreground mb-2">
+              🔧 Admin Dashboard
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Welcome,{" "}
+              {(typeof window !== "undefined" &&
+                localStorage.getItem("userEmail")) ||
+                "Admin"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            {/* Search Logs Card */}
+            <div
+              onClick={() => setActiveView("logs")}
+              className="bg-background border border-border rounded-2xl p-8 cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-36 h-36 bg-[#761DE7]/10 rounded-full transform translate-x-1/2 -translate-y-1/2" />
+              <FileText className="h-12 w-12 text-[#761DE7] mb-4 relative z-10" />
+              <h3 className="text-2xl font-semibold text-foreground mb-3 relative z-10">
+                Search Logs
+              </h3>
+              <p className="text-muted-foreground mb-6 leading-relaxed relative z-10">
+                View search queries, user activity, performance metrics, and
+                system events in real-time.
+              </p>
+              <div className="flex items-center text-[#761DE7] font-medium text-sm relative z-10 group-hover:gap-2 transition-all">
+                Open Logs <Activity className="h-4 w-4 ml-2" />
+              </div>
+            </div>
+
+            {/* Database Viewer Card */}
+            <div
+              onClick={() => setActiveView("database")}
+              className="bg-background border border-border rounded-2xl p-8 cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-36 h-36 bg-[#f5576c]/10 rounded-full transform translate-x-1/2 -translate-y-1/2" />
+              <Database className="h-12 w-12 text-[#f5576c] mb-4 relative z-10" />
+              <h3 className="text-2xl font-semibold text-foreground mb-3 relative z-10">
+                Database Viewer
+              </h3>
+              <p className="text-muted-foreground mb-6 leading-relaxed relative z-10">
+                Browse and search all database tables, profiles, and connections
+                interactively.
+              </p>
+              <div className="flex items-center text-[#f5576c] font-medium text-sm relative z-10 group-hover:gap-2 transition-all">
+                Open Database <Database className="h-4 w-4 ml-2" />
+              </div>
+            </div>
+          </div>
+
+          {/* Admin Access Info Card */}
+          <div className="bg-background border border-border rounded-xl p-6">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">ℹ️</div>
+              <div>
+                <strong className="block mb-2 text-foreground text-lg">
+                  Admin Access
+                </strong>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  These tools are only accessible to admin users. All views are
+                  embedded directly in the dashboard for a seamless experience.
+                  You can also open them in new tabs if needed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
@@ -135,7 +217,11 @@ export function NewAdminDashboard() {
                 )}
               </Button>
               <h1 className="text-2xl font-semibold text-foreground">
-                {activeView === "logs" ? "Search Logs" : "Database Viewer"}
+                {activeView === "logs"
+                  ? "Search Logs"
+                  : activeView === "database"
+                  ? "Database Viewer"
+                  : "Admin Dashboard"}
               </h1>
             </div>
             <div className="flex items-center gap-2">

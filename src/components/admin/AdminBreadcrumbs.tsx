@@ -5,11 +5,11 @@ import { ChevronDown, Database, Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AdminBreadcrumbsProps {
-  activeView: "logs" | "database";
+  activeView: "dashboard" | "logs" | "database";
   selectedTable: string | null;
   tables: Array<{ table_name: string }>;
   onTableSelect: (tableName: string) => void;
-  onViewChange: (view: "logs" | "database") => void;
+  onViewChange: (view: "dashboard" | "logs" | "database") => void;
 }
 
 export function AdminBreadcrumbs({
@@ -49,7 +49,7 @@ export function AdminBreadcrumbs({
     { label: "Search Logs", value: "logs" as const },
     { label: "Database", value: "database" as const },
   ];
-  const currentView = activeView === "logs" ? "Search Logs" : "Database";
+  const currentView = activeView === "logs" ? "Search Logs" : activeView === "database" ? "Database" : "Dashboard";
 
   const getDatabaseLabel = () => {
     if (activeView === "logs") {

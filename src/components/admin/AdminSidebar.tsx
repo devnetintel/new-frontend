@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import type { AdminTable } from "@/types/admin";
 
 interface AdminSidebarProps {
-  activeView: "logs" | "database";
-  onViewChange: (view: "logs" | "database") => void;
+  activeView: "dashboard" | "logs" | "database";
+  onViewChange: (view: "dashboard" | "logs" | "database") => void;
   selectedTable: string | null;
   tables: AdminTable[];
   onTableSelect: (tableName: string | null) => void;
