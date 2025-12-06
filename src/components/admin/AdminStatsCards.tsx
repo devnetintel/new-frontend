@@ -75,7 +75,7 @@ export function AdminStatsCards({ logs }: AdminStatsCardsProps) {
         </div>
       </div>
 
-      <div className="bg-background rounded-lg border border-border p-5image.png shadow-sm">
+      <div className="bg-background rounded-lg border border-border p-5 shadow-sm">
         <div className="text-xs font-semibold text-muted-foreground mb-2">
           Avg. coherence score
         </div>

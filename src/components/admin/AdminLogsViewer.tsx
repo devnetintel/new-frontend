@@ -217,32 +217,193 @@ export const AdminLogsViewer: React.FC = () => {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-            <table className="w-max border-collapse text-[13px] min-w-full">
+            <table className="w-max border-collapse text-[12px] min-w-full">
               <thead>
                 <tr className="bg-gray-50 border-b-2 border-gray-300">
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
+                  {/* Basic Info */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap sticky left-0 bg-gray-50 z-10">
                     Log ID
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
                     Timestamp
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Created At
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Session ID
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    User ID
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
                     User Email
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black min-w-[300px]">
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    User Name
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    User IP
+                  </th>
+                  
+                  {/* Query Info */}
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[200px]">
                     Query Text
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Query Type
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
                     Is Searchable
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
+                  
+                  {/* Parsed Fields */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Skills
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Location
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Domains
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Company
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Seniority
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Education
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parsed Exp Min
+                  </th>
+                  
+                  {/* Expanded Fields */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Expanded Skills
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Expanded Locations
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Expanded Companies
+                  </th>
+                  
+                  {/* Filters */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Filters Applied
+                  </th>
+                  
+                  {/* SQL Metrics */}
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[300px]">
+                    SQL Query
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    SQL Gen Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    SQL Exec Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    SQL Rows Returned
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    SQL Error
+                  </th>
+                  
+                  {/* Vector Metrics */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Vector Exec Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Vector Rows Returned
+                  </th>
+                  
+                  {/* Hybrid Metrics */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Hybrid Total Results
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Hybrid SQL Only
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Hybrid Vector Only
+                  </th>
+                  
+                  {/* Reranking */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Reranking Time (ms)
+                  </th>
+                  
+                  {/* Results */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
                     Final Result Count
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
-                    Total Execution Time
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Profiles Evaluated
                   </th>
-                  <th className="px-3 py-3 text-left font-semibold text-black whitespace-nowrap">
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Profiles After Filtering
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[200px]">
+                    Final Results Summary
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Top Result Names
+                  </th>
+                  
+                  {/* Evaluation Pipeline */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Criteria Count
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Criteria Ext Success
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Criteria Ext Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[300px]">
+                    Criteria JSON
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Evaluation Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Avg Eval Time/Profile (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Parallel Eval Success
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Aggregation Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Aggregation Success
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Low Profiles Filtered
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[300px]">
+                    Detailed Eval Results
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[300px]">
+                    Results Before Rerank
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black min-w-[300px]">
+                    Results After Rerank
+                  </th>
+                  
+                  {/* Status */}
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Total Exec Time (ms)
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
                     Search Status
+                  </th>
+                  <th className="px-2 py-2 text-left font-semibold text-black whitespace-nowrap">
+                    Error Message
                   </th>
                 </tr>
               </thead>
@@ -255,37 +416,195 @@ export const AdminLogsViewer: React.FC = () => {
                   return (
                     <tr
                       key={log.log_id || idx}
-                      className="border-b border-gray-100"
+                      className="border-b border-gray-100 hover:bg-gray-50"
                     >
-                      <td className="px-3 py-2.5 whitespace-nowrap align-top text-black">
-                        {log.log_id}
+                      {/* Basic Info */}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black sticky left-0 bg-white z-10">
+                        {log.log_id || "—"}
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap align-top text-black">
-                        {formatDate(log.timestamp)}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.timestamp ? formatDate(log.timestamp) : "—"}
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap align-top text-black">
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.created_at ? formatDate(log.created_at) : "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {renderCell(log.session_id, idx, "session_id", 50)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {renderCell(log.user_id, idx, "user_id", 50)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
                         {log.user_email || "—"}
                       </td>
-                      <td className="px-3 py-2.5 whitespace-pre-wrap align-top break-words text-black">
-                        {renderCell(log.query_text, idx, "query_text", 150)}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.user_name || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.user_ip || "—"}
+                      </td>
+                      
+                      {/* Query Info */}
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.query_text, idx, "query_text", 100)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.query_type || "—"}
                       </td>
                       <td
                         className={cn(
-                          "px-3 py-2.5 whitespace-nowrap align-top",
+                          "px-2 py-2 whitespace-nowrap align-top",
                           log.is_searchable ? "text-green-600" : "text-red-600"
                         )}
                       >
                         {log.is_searchable ? "✓" : "✗"}
                       </td>
+                      
+                      {/* Parsed Fields */}
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.parsed_skills, idx, "parsed_skills", 50)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.parsed_location || "—"}
+                      </td>
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.parsed_domains, idx, "parsed_domains", 50)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.parsed_company || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.parsed_seniority || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.parsed_education || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.parsed_experience_min ?? "—"}
+                      </td>
+                      
+                      {/* Expanded Fields */}
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.expanded_skills, idx, "expanded_skills", 50)}
+                      </td>
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.expanded_locations, idx, "expanded_locations", 50)}
+                      </td>
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.expanded_companies, idx, "expanded_companies", 50)}
+                      </td>
+                      
+                      {/* Filters */}
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.filters_applied, idx, "filters_applied", 100)}
+                      </td>
+                      
+                      {/* SQL Metrics */}
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.sql_query, idx, "sql_query", 100)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.sql_generation_time_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.sql_execution_time_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.sql_rows_returned ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.sql_error, idx, "sql_error", 50)}
+                      </td>
+                      
+                      {/* Vector Metrics */}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.vector_execution_time_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.vector_rows_returned ?? "—"}
+                      </td>
+                      
+                      {/* Hybrid Metrics */}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.hybrid_total_results ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.hybrid_sql_only ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.hybrid_vector_only ?? "—"}
+                      </td>
+                      
+                      {/* Reranking */}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.reranking_time_ms ?? "—"}
+                      </td>
+                      
+                      {/* Results */}
                       <td
                         className={cn(
-                          "px-3 py-2.5 whitespace-nowrap align-top font-semibold text-sm",
+                          "px-2 py-2 whitespace-nowrap align-top font-semibold text-sm",
                           resultCount > 0 ? "text-green-600" : "text-gray-500"
                         )}
                       >
                         {resultCount}
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap align-top">
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.profiles_evaluated_count ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.profiles_after_filtering ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.final_results_summary, idx, "final_results_summary", 100)}
+                      </td>
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.top_result_names, idx, "top_result_names", 100)}
+                      </td>
+                      
+                      {/* Evaluation Pipeline */}
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.criteria_count ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.criteria_extraction_success ? "✓" : log.criteria_extraction_success === false ? "✗" : "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.criteria_extraction_time_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.criteria_json, idx, "criteria_json", 100)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.evaluation_time_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.average_evaluation_time_per_profile_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.parallel_evaluation_success ? "✓" : log.parallel_evaluation_success === false ? "✗" : "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.aggregation_time_ms ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.aggregation_success ? "✓" : log.aggregation_success === false ? "✗" : "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap align-top text-black">
+                        {log.all_low_profiles_filtered ?? "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.detailed_evaluation_results, idx, "detailed_evaluation_results", 100)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.detailed_results_before_rerank, idx, "detailed_results_before_rerank", 100)}
+                      </td>
+                      <td className="px-2 py-2 whitespace-pre-wrap align-top break-words text-black">
+                        {renderCell(log.detailed_results_after_rerank, idx, "detailed_results_after_rerank", 100)}
+                      </td>
+                      
+                      {/* Status */}
+                      <td className="px-2 py-2 whitespace-nowrap align-top">
                         <span
                           className={cn(
                             "px-2 py-1 rounded text-xs",
@@ -294,20 +613,23 @@ export const AdminLogsViewer: React.FC = () => {
                               : "bg-blue-100 text-blue-900"
                           )}
                         >
-                          {(durationMs / 1000).toFixed(2)}s
+                          {durationMs ? `${(durationMs / 1000).toFixed(2)}s` : "—"}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap align-top">
+                      <td className="px-2 py-2 whitespace-nowrap align-top">
                         <span
                           className={cn(
                             "px-2.5 py-1 rounded-full text-xs font-semibold",
-                            resultCount > 0
+                            log.search_status === "success"
                               ? "bg-green-100 text-green-800"
                               : "bg-yellow-100 text-yellow-800"
                           )}
                         >
-                          {resultCount > 0 ? "Success" : "No Results"}
+                          {log.search_status || "—"}
                         </span>
+                      </td>
+                      <td className="px-2 py-2 align-top text-black">
+                        {renderCell(log.error_message, idx, "error_message", 50)}
                       </td>
                     </tr>
                   );
