@@ -46,6 +46,7 @@ export function AdminBreadcrumbs({
   }, []);
 
   const viewOptions = [
+    { label: "Dashboard", value: "dashboard" as const },
     { label: "Search Logs", value: "logs" as const },
     { label: "Database", value: "database" as const },
   ];

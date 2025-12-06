@@ -1,6 +1,10 @@
 /**
  * Admin API Service
  * Handles admin-only API endpoints
+ *
+ * Note: The backend provides both JSON API endpoints and HTML viewer endpoints:
+ * - JSON APIs: /api/admin/logs, /api/admin/db/tables (for programmatic access)
+ * - HTML Viewers: /logs, /db (for direct browser viewing, return HTML pages)
  */
 
 import type {
@@ -11,8 +15,7 @@ import type {
 } from "@/types/admin";
 
 // API Base URL - Next.js uses NEXT_PUBLIC_ prefix
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 /**
  * Fetch search logs (admin only)
@@ -140,3 +143,37 @@ export async function fetchAdminTableData(
   };
 }
 
+/**
+ * Get URL for admin database HTML viewer
+ * Returns HTML page for interactive database browsing
+ * @param token JWT authentication token
+ * @returns URL string for the database viewer
+ */
+export function getAdminDatabaseViewerUrl(token: string): string {
+  return `${API_BASE}/db?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Get URL for admin logs HTML viewer
+ * Returns HTML page for search logs dashboard
+ * @param token JWT authentication token
+ * @param options Optional query parameters
+ * @returns URL string for the logs viewer
+ */
+export function getAdminLogsViewerUrl(
+  token: string,
+  options?: {
+    limit?: number;
+    user_email?: string;
+  }
+): string {
+  const url = new URL(`${API_BASE}/logs`);
+  url.searchParams.append("token", token);
+  if (options?.limit) {
+    url.searchParams.append("limit", options.limit.toString());
+  }
+  if (options?.user_email) {
+    url.searchParams.append("user_email", options.user_email);
+  }
+  return url.toString();
+}
