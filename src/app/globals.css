@@ -448,6 +448,139 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
+
+  /* Themed scrollbar utility - always visible */
+  .themed-scrollbar {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #761DE7 #374151; /* thumb and track - dark mode */
+    /* Force scrollbars to always be visible */
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar {
+    width: 10px; /* Vertical scrollbar width */
+    height: 10px; /* Horizontal scrollbar height */
+    /* Always show scrollbar */
+    -webkit-appearance: none;
+    display: block;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar-track {
+    background: #374151; /* Dark gray track */
+    border-radius: 4px;
+    /* Ensure track is always visible */
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .themed-scrollbar::-webkit-scrollbar-thumb {
+    background: #761DE7; /* Brand purple */
+    border-radius: 4px;
+    border: 2px solid #374151;
+    /* Always visible thumb */
+    min-height: 20px;
+    min-width: 20px;
+  }
+
+  .themed-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6518c4; /* Darker purple on hover */
+  }
+
+  /* Horizontal scrollbar at bottom */
+  .themed-scrollbar::-webkit-scrollbar:horizontal {
+    height: 10px;
+  }
+
+  /* Vertical scrollbar on right */
+  .themed-scrollbar::-webkit-scrollbar:vertical {
+    width: 10px;
+  }
+
+  /* Corner where scrollbars meet */
+  .themed-scrollbar::-webkit-scrollbar-corner {
+    background: #374151;
+  }
+
+  /* Apply themed scrollbar to select dropdowns */
+  select.themed-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #761DE7 #374151;
+  }
+
+  select.themed-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  select.themed-scrollbar::-webkit-scrollbar-track {
+    background: #374151;
+    border-radius: 4px;
+  }
+
+  select.themed-scrollbar::-webkit-scrollbar-thumb {
+    background: #761DE7;
+    border-radius: 4px;
+  }
+
+  select.themed-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6518c4;
+  }
+
+  /* Style the dropdown menu scrollbar (works in some browsers) */
+  select option {
+    background: #1f2937;
+    color: #f3f4f6;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 2px 0;
+  }
+
+  /* Style select dropdown menu (limited browser support) */
+  select:focus {
+    outline: none;
+  }
+
+  /* For rounded dropdown menu, we need to use a custom solution */
+  /* This will style the select element itself and try to style the dropdown */
+  select.rounded-dropdown {
+    border-radius: 9999px;
+  }
+
+  /* Attempt to style the dropdown menu (limited support) */
+  select.rounded-dropdown option {
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  /* For custom dropdowns, apply themed scrollbar */
+  [role="listbox"].themed-scrollbar,
+  [role="menu"].themed-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #761DE7 #374151;
+  }
+
+  [role="listbox"].themed-scrollbar::-webkit-scrollbar,
+  [role="menu"].themed-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  [role="listbox"].themed-scrollbar::-webkit-scrollbar-track,
+  [role="menu"].themed-scrollbar::-webkit-scrollbar-track {
+    background: #374151;
+    border-radius: 4px;
+  }
+
+  [role="listbox"].themed-scrollbar::-webkit-scrollbar-thumb,
+  [role="menu"].themed-scrollbar::-webkit-scrollbar-thumb {
+    background: #761DE7;
+    border-radius: 4px;
+  }
+
+  [role="listbox"].themed-scrollbar::-webkit-scrollbar-thumb:hover,
+  [role="menu"].themed-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6518c4;
+  }
 }
 
 /* Module A: "The Velvet Rope" Entry Styles */
