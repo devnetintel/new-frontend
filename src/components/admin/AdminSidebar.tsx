@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Database, FileText, LayoutDashboard } from "lucide-react";
+import { Database, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AdminTable } from "@/types/admin";
 
@@ -26,26 +26,11 @@ export function AdminSidebar({
       <div className="p-4 border-b border-border">
         <button
           onClick={() => {
-            onViewChange("dashboard");
-            onTableSelect(null);
-          }}
-          className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors",
-            activeView === "dashboard"
-              ? "bg-[#761DE7] text-white"
-              : "text-muted-foreground hover:bg-muted"
-          )}
-        >
-          <LayoutDashboard className="h-5 w-5" />
-          <span className="font-medium">Dashboard</span>
-        </button>
-        <button
-          onClick={() => {
             onViewChange("logs");
             onTableSelect(null);
           }}
           className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors mt-2",
+            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors",
             activeView === "logs"
               ? "bg-[#761DE7] text-white"
               : "text-muted-foreground hover:bg-muted"

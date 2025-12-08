@@ -66,15 +66,15 @@ export function AdminBreadcrumbs({
           <div className="flex items-center relative" ref={viewRef}>
             <button
               onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-              className="inline-flex items-center text-foreground bg-background box-border border border-transparent hover:bg-muted focus:ring-4 focus:ring-ring font-medium leading-5 rounded-md text-sm px-3 py-2 focus:outline-none transition-colors"
+              className="inline-flex items-center text-foreground bg-background box-border border border-transparent hover:bg-muted focus:ring-4 focus:ring-ring font-medium leading-5 rounded-md text-xs px-2 py-1 focus:outline-none transition-colors"
             >
-              <Code2 className="w-3.5 h-3.5 me-1.5" />
+              <Code2 className="w-3 h-3 me-1.5" />
               {currentView}
-              <ChevronDown className="w-3.5 h-3.5 ms-1.5" />
+              <ChevronDown className="w-3 h-3 ms-1.5" />
             </button>
             {viewDropdownOpen && (
               <div className="z-10 bg-background border border-border rounded-md shadow-lg w-44 absolute top-full left-0 mt-1">
-                <ul className="p-2 text-sm text-muted-foreground font-medium space-y-1">
+                <ul className="p-2 text-xs text-muted-foreground font-medium space-y-1">
                   {viewOptions.map((option) => (
                     <li key={option.value}>
                       <button
@@ -97,7 +97,7 @@ export function AdminBreadcrumbs({
             )}
           </div>
         </li>
-        <span className="mx-2 text-muted-foreground">/</span>
+        <span className="mx-2 text-muted-foreground text-xs">/</span>
         <li aria-current="page">
           <div className="flex items-center relative" ref={databaseRef}>
             <button
@@ -106,12 +106,12 @@ export function AdminBreadcrumbs({
                   setDatabaseDropdownOpen(!databaseDropdownOpen);
                 }
               }}
-              className="inline-flex items-center text-foreground bg-background box-border border border-transparent hover:bg-muted focus:ring-4 focus:ring-ring font-medium leading-5 rounded-md text-sm px-3 py-2 focus:outline-none transition-colors"
+              className="inline-flex items-center text-foreground bg-background box-border border border-transparent hover:bg-muted focus:ring-4 focus:ring-ring font-medium leading-5 rounded-md text-xs px-2 py-1 focus:outline-none transition-colors"
             >
-              <Database className="w-3.5 h-3.5 me-1.5" />
+              <Database className="w-3 h-3 me-1.5" />
               {getDatabaseLabel()}
               {activeView === "database" && (
-                <ChevronDown className="w-3.5 h-3.5 ms-1.5" />
+                <ChevronDown className="w-3 h-3 ms-1.5" />
               )}
             </button>
             {databaseDropdownOpen && activeView === "database" && (
