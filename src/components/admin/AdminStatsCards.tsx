@@ -47,39 +47,39 @@ export function AdminStatsCards({ logs }: AdminStatsCardsProps) {
   }, [logs]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-      <div className="bg-background rounded-lg border border-border p-5 shadow-sm">
-        <div className="text-xs font-semibold text-muted-foreground mb-2">
+    <div className="grid grid-cols-4 gap-2 lg:gap-3">
+      <div className="bg-background rounded-lg border border-border p-2 lg:p-5 shadow-sm aspect-square lg:aspect-auto flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+        <div className="text-[10px] lg:text-xs font-semibold text-muted-foreground mb-1 lg:mb-2 leading-tight">
           Total prompts
         </div>
-        <div className="text-xl font-semibold text-foreground">
+        <div className="text-sm lg:text-xl font-semibold text-foreground">
           {stats.totalPrompts}
         </div>
       </div>
 
-      <div className="bg-background rounded-lg border border-border p-5 shadow-sm">
-        <div className="text-xs font-semibold text-muted-foreground mb-2">
-          Avg. response time
+      <div className="bg-background rounded-lg border border-border p-2 lg:p-5 shadow-sm aspect-square lg:aspect-auto flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+        <div className="text-[10px] lg:text-xs font-semibold text-muted-foreground mb-1 lg:mb-2 leading-tight">
+          Avg. time
         </div>
-        <div className="text-xl font-semibold text-foreground">
+        <div className="text-sm lg:text-xl font-semibold text-foreground">
           {stats.avgResponseTime}s
         </div>
       </div>
 
-      <div className="bg-background rounded-lg border border-border p-5 shadow-sm">
-        <div className="text-xs font-semibold text-muted-foreground mb-2">
+      <div className="bg-background rounded-lg border border-border p-2 lg:p-5 shadow-sm aspect-square lg:aspect-auto flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+        <div className="text-[10px] lg:text-xs font-semibold text-muted-foreground mb-1 lg:mb-2 leading-tight">
           Success rate
         </div>
-        <div className="text-xl font-semibold text-foreground">
+        <div className="text-sm lg:text-xl font-semibold text-foreground">
           {stats.successRate}%
         </div>
       </div>
 
-      <div className="bg-background rounded-lg border border-border p-5 shadow-sm">
-        <div className="text-xs font-semibold text-muted-foreground mb-2">
-          Avg. coherence score
+      <div className="bg-background rounded-lg border border-border p-2 lg:p-5 shadow-sm aspect-square lg:aspect-auto flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+        <div className="text-[10px] lg:text-xs font-semibold text-muted-foreground mb-1 lg:mb-2 leading-tight">
+          Avg. score
         </div>
-        <div className="text-xl font-semibold text-foreground">
+        <div className="text-sm lg:text-xl font-semibold text-foreground">
           {stats.avgCoherenceScore}
         </div>
       </div>
