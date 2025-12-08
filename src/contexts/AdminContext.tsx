@@ -82,7 +82,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [tableSearchColumn, setTableSearchColumn] = useState("");
   const [tableSearchValue, setTableSearchValue] = useState("");
   const [tableOrderBy, setTableOrderBy] = useState("");
-  const [tableOrderDirection, setTableOrderDirection] = useState<"ASC" | "DESC">("DESC");
+  const [tableOrderDirection, setTableOrderDirection] = useState<"ASC" | "DESC">("ASC");
   
   // Load logs
   const refreshLogs = useCallback(async () => {
@@ -182,7 +182,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       setTableSearchColumn("");
       setTableSearchValue("");
       setTableOrderBy("");
-      setTableOrderDirection("DESC");
+      setTableOrderDirection("ASC");
     }
   }, [selectedTable]);
   
