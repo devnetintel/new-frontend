@@ -31,5 +31,6 @@ export interface WorkspaceInfo {
   name: string;
   profile_count: number;
   source: "link" | "admin";
+  isOwner?: boolean; // True if the logged-in user owns this network
 }
 

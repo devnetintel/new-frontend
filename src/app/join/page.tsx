@@ -9,14 +9,15 @@ import { cn } from "@/lib/utils";
 
 // Mock Data for Connectors
 const CONNECTORS: Record<string, { name: string; avatar: string }> = {
-    shubham_s: {
+    shubham: {
         name: "Shubham Rai",
-        avatar: "https://github.com/shadcn.png", // Placeholder, replace with real asset if available
+        avatar: "https://github.com/shadcn.png",
     },
-    ajay_s: {
+    suwalka: {
         name: "Ajay Suwalka",
         avatar: "https://github.com/shadcn.png",
     },
+
     default: {
         name: "The Connector",
         avatar: "https://github.com/shadcn.png",

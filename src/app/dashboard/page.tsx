@@ -75,8 +75,9 @@ export default function Dashboard() {
     const { user } = useUser()
     const router = useRouter()
 
-    // DEV ONLY: State Simulator
-    const [userState, setUserState] = useState<UserState>("active_hub")
+    // Auto-detect user state based on workspace ownership
+    const [userState, setUserState] = useState<UserState>("new_spoke") // Default to spoke
+    const [workspaces, setWorkspaces] = useState<any[]>([])
 
     // Spoke State
     const [requests, setRequests] = useState<IntroRequest[]>([])
@@ -89,6 +90,7 @@ export default function Dashboard() {
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState<RequestData | null>(null)
 
+    /*
     useEffect(() => {
         if (isLoaded) {
             if (!isSignedIn) {
@@ -96,6 +98,42 @@ export default function Dashboard() {
             }
         }
     }, [isLoaded, isSignedIn, router])
+    */
+
+    // Fetch workspaces and auto-detect user role
+    useEffect(() => {
+        const loadWorkspaces = async () => {
+            if (!isSignedIn || !user?.id) return;
+
+            try {
+                const token = await getToken();
+                if (!token) return;
+
+                // Fetch workspaces from API
+                const response = await fetch("/api/workspaces", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const userWorkspaces = data.workspaces || [];
+                    setWorkspaces(userWorkspaces);
+
+                    // Auto-detect: If user owns at least one network, they're a hub
+                    const hasOwnedNetwork = userWorkspaces.some((w: any) => w.isOwner);
+                    setUserState(hasOwnedNetwork ? "active_hub" : "new_spoke");
+                }
+            } catch (error) {
+                console.error("Failed to fetch workspaces:", error);
+            }
+        };
+
+        if (isLoaded && isSignedIn) {
+            loadWorkspaces();
+        }
+    }, [isLoaded, isSignedIn, user?.id, getToken]);
 
     // Fetch requests from API (Spoke View)
     useEffect(() => {

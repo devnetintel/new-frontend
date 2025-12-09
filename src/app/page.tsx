@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { SearchInput } from "@/components/search-input";
 import { ProfileCard } from "@/components/profile-card";
@@ -26,25 +26,24 @@ function HomePageContent() {
     const { isSignedIn, isLoaded, getToken } = useAuth();
     const { user } = useUser();
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // State
+    const [query, setQuery] = useState("");
     const [isThinking, setIsThinking] = useState(false);
     const [thinkingStep, setThinkingStep] = useState(0);
     const [results, setResults] = useState<Connection[]>([]);
     const [hasSearched, setHasSearched] = useState(false);
-    const [selectedProfile, setSelectedProfile] = useState<Connection | null>(
-        null
-    );
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [query, setQuery] = useState("");
-    const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
-    const [selectedWorkspaceIds, setSelectedWorkspaceIds] = useState<string[]>(
-        []
-    );
-    const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
     const [isClarifying, setIsClarifying] = useState(false);
     const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([]);
-    const [isVoiceDiscoveryOpen, setIsVoiceDiscoveryOpen] = useState(false);
-    const [originalQuery, setOriginalQuery] = useState<string>("");
+    const [originalQuery, setOriginalQuery] = useState("");
+    const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
+    const [selectedWorkspaceIds, setSelectedWorkspaceIds] = useState<string[]>([]);
+    const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
     const [isSpotlight, setIsSpotlight] = useState(false);
+    const [isVoiceDiscoveryOpen, setIsVoiceDiscoveryOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState<Connection | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false); // Kept this as it was not explicitly removed by the instruction.
 
     // CRITICAL: Capture workspace referral from URL BEFORE Clerk redirects
     // This runs immediately on page load to preserve workspace through auth flow
@@ -170,13 +169,14 @@ function HomePageContent() {
                     });
 
                     // Show toast notification
+                    const ownerName = result.workspace.name.split("'")[0];
                     if (!result.already_had_access) {
                         toast.success(
-                            `You now have access to ${result.workspace.name}'s Network!`
+                            `You now have access to ${ownerName}'s Network!`
                         );
                     } else {
                         toast.info(
-                            `You already have access to ${result.workspace.name}'s Network`
+                            `You already have access to ${ownerName}'s Network`
                         );
                     }
                 } else {
@@ -380,6 +380,7 @@ function HomePageContent() {
                         <SearchInput
                             onSearch={(query) => {
                                 setQuery(query);
+                                setIsSpotlight(false); // Turn off spotlight when opening voice discovery
                                 // Always trigger voice discovery / inquiry mode
                                 setIsVoiceDiscoveryOpen(true);
                             }}
@@ -394,6 +395,7 @@ function HomePageContent() {
                     <div className={cn("w-full max-w-3xl animate-in slide-in-from-bottom-4 fade-in duration-700 delay-200 transition-opacity duration-300", isSpotlight ? "opacity-0 pointer-events-none" : "opacity-100")}>
                         <InspirationDeck onSelect={(q) => {
                             setQuery(q);
+                            setIsSpotlight(false); // Turn off spotlight when opening voice discovery
                             // Always trigger voice discovery / inquiry mode
                             setIsVoiceDiscoveryOpen(true);
                         }} />

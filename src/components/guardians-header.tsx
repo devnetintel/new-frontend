@@ -10,23 +10,36 @@ interface GuardiansHeaderProps {
 }
 
 export function GuardiansHeader({ workspaces, userName, className }: GuardiansHeaderProps) {
-    // Get unique owner names (mock logic since WorkspaceInfo currently has 'name' which is usually the owner's name)
-    // In a real app, we might have specific owner fields.
-    const ownerNames = Array.from(new Set(workspaces.map(w => w.name.split("'")[0].trim()))).filter(Boolean)
+    // Separate owned networks from guest networks
+    const ownedNetworks = workspaces.filter(w => w.isOwner);
+    const guestNetworks = workspaces.filter(w => !w.isOwner);
 
-    // Fallback if no workspaces
-    if (ownerNames.length === 0) {
-        ownerNames.push("The Council")
+    // Get unique owner names from GUEST networks only (exclude owned networks from the "backing you" message)
+    const guestOwnerNames = Array.from(new Set(guestNetworks.map(w => w.name.split("'")[0].trim()))).filter(Boolean);
+
+    // Fallback if no guest networks
+    if (guestOwnerNames.length === 0 && ownedNetworks.length > 0) {
+        // User only has their own network, show encouraging message
+        guestOwnerNames.push("Your Network");
+    } else if (guestOwnerNames.length === 0) {
+        guestOwnerNames.push("The Council");
     }
 
-    // Construct the "Collective" copy
-    let collectiveText = ""
-    if (ownerNames.length === 1) {
-        collectiveText = `${userName}, ${ownerNames[0]} is here to connect you.`
-    } else if (ownerNames.length === 2) {
-        collectiveText = `${userName}, ${ownerNames[0]} and ${ownerNames[1]} are here to connect you.`
+    // Construct the "Collective" copy according to PRD
+    // Only show guest network owners (people backing you), not your own network
+    let collectiveText = "";
+    if (guestOwnerNames.length === 1 && guestOwnerNames[0] === "Your Network") {
+        collectiveText = "Your network is ready to connect you.";
+    } else if (guestOwnerNames.length === 1) {
+        collectiveText = `${guestOwnerNames[0]} is ready to connect you.`;
+    } else if (guestOwnerNames.length === 2) {
+        collectiveText = `${guestOwnerNames[0]} and ${guestOwnerNames[1]} are ready to connect you.`;
+    } else if (guestOwnerNames.length === 3) {
+        collectiveText = `${guestOwnerNames[0]}, ${guestOwnerNames[1]}, and ${guestOwnerNames[2]} are ready to connect you.`;
     } else {
-        collectiveText = `${userName}, ${ownerNames[0]}, ${ownerNames[1]} and others are here to connect you.`
+        // 4+ networks: show first name + count of others
+        const othersCount = guestOwnerNames.length - 1;
+        collectiveText = `${guestOwnerNames[0]} and ${othersCount} other${othersCount !== 1 ? 's' : ''} are ready to connect you.`;
     }
 
     return (

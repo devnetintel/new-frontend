@@ -226,7 +226,7 @@ export function SearchInput({ className, onSearch, isThinking, sessionId, ...pro
                         }
                     }}
                     placeholder="Describe the expert you wish you could talk to..."
-                    className="w-full min-h-[60px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-2xl md:text-3xl font-light placeholder:text-muted-foreground/40 text-center md:text-left leading-relaxed"
+                    className="w-full min-h-[60px] bg-transparent border-none resize-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none text-lg md:text-xl font-light placeholder:text-muted-foreground/40 text-center md:text-left leading-relaxed"
                     style={{ scrollMargin: '20px' }}
                     rows={1}
                     {...props}

@@ -10,6 +10,8 @@ const isPublicRoute = createRouteMatcher([
   "/consent(.*)",
   "/status(.*)",
   "/join(.*)",
+  "/", // Temp: Public for screenshots
+  "/dashboard(.*)", // Temp: Public for screenshots
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

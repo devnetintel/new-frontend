@@ -17,14 +17,22 @@ import type { WorkspaceInfo } from "@/types";
 export async function fetchWorkspaces(
   token: string | null
 ): Promise<WorkspaceInfo[]> {
-  if (!token) {
+  // Force mock API for screenshots
+  const useMock = true;
+
+  if (!token && !useMock) {
     throw new Error("Authentication required. Please sign in.");
   }
 
-  const response = await fetch(`${API_BASE}/api/workspaces`, {
+  // Use local mock API for development
+  const apiUrl = useMock
+    ? "http://localhost:5173/api/workspaces" // Use absolute URL for server-side fetch if needed, or relative for client
+    : `${API_BASE}/api/workspaces`;
+
+  const response = await fetch(apiUrl, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token || "mock_token"}`,
     },
   });
 
@@ -46,6 +54,7 @@ export async function fetchWorkspaces(
       owner_name?: string;
       profile_count?: number;
       source?: string;
+      isOwner?: boolean;
     }) => ({
       id: ws.workspace_id,
       name: ws.name || ws.owner_name || ws.workspace_id,
@@ -53,6 +62,7 @@ export async function fetchWorkspaces(
       source: (ws.source === "link" || ws.source === "admin"
         ? ws.source
         : "link") as "link" | "admin",
+      isOwner: ws.isOwner || false,
     })
   );
 
