@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useAuth } from "@clerk/nextjs";
-import { gsap } from "gsap";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,15 +17,7 @@ import { Input } from "@/components/ui/input";
 import type { Connection } from "@/types";
 import { submitIntroRequest } from "@/services";
 import { toast } from "sonner";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Sparkles,
-  X,
-  UserPlus,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles, UserPlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface IntroRequestModalProps {
@@ -59,9 +49,7 @@ export function IntroRequestModal({
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
-  const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const bannerRef = useRef<HTMLDivElement>(null);
 
   // Reset state when modal opens or profile changes
   useEffect(() => {
@@ -72,74 +60,10 @@ export function IntroRequestModal({
       setErrorMessage("");
       setIsGeneratingAI(false);
       setIsBannerDismissed(false);
-      setIsBannerCollapsed(false);
     }
   }, [isOpen, profile]);
 
   // isHubUser is now passed as a prop from the /ask API response
-
-  // GSAP animation for banner - comes from behind the modal
-  useEffect(() => {
-    if (
-      !isOpen ||
-      isHubUserProp !== false ||
-      isBannerDismissed ||
-      !bannerRef.current
-    )
-      return;
-
-    const banner = bannerRef.current;
-
-    // Set initial state - behind the modal (lower z-index, scaled down, translated up)
-    gsap.set(banner, {
-      zIndex: 51, // Start between overlay (z-50) and modal content
-      scale: 1,
-      y: 20,
-      opacity: 1,
-    });
-
-    // Animate to final state - between overlay and modal content
-    const animation = gsap.to(banner, {
-      zIndex: 51, // Between overlay (z-50) and modal content (z-50, but rendered after)
-      scale: 1,
-      y: 0,
-      duration: 0.6,
-      ease: "power3.out",
-      opacity: 1,
-      delay: 0.3, // Wait a bit for modal to appear first
-    });
-
-    // Cleanup function
-    return () => {
-      animation.kill();
-    };
-  }, [isOpen, isHubUserProp, isBannerDismissed]);
-
-  // Function to toggle banner collapse/expand
-  const handleBannerToggle = () => {
-    if (!bannerRef.current) return;
-
-    const banner = bannerRef.current;
-    const newCollapsedState = !isBannerCollapsed;
-
-    if (newCollapsedState) {
-      // Collapse: move down
-      gsap.to(banner, {
-        y: 80,
-        duration: 0.3,
-        ease: "power2.in",
-      });
-    } else {
-      // Expand: move back up
-      gsap.to(banner, {
-        y: 0,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-    }
-
-    setIsBannerCollapsed(newCollapsedState);
-  };
 
   const handleAiDraft = async () => {
     if (!profile) return;
@@ -267,218 +191,177 @@ export function IntroRequestModal({
   if (!profile) return null;
 
   return (
-    <>
-      {/* Pop-up Banner - Rendered in Portal to appear above modal overlay */}
-      {isOpen &&
-        isHubUserProp === false &&
-        !isBannerDismissed &&
-        typeof window !== "undefined" &&
-        createPortal(
-          <div
-            ref={bannerRef}
-            className="fixed top-37 left-1/2 transform -translate-x-1/2 w-full   max-w-[80vw] sm:max-w-[420px] lg:max-w-[480px]  pointer-events-none"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 rounded-lg shadow-lg px-3 py-4 flex items-center justify-between gap-4 bg-background pointer-events-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <UserPlus className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-sm md:text-base text-foreground">
-                    Onboard your  Network
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Connect your network
-                  </p>
-                </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-[90vw] sm:max-w-[500px] p-0 overflow-hidden rounded-2xl gap-0 z-55 [&>button]:hidden">
+        {/* Banner - Permanent part of dialog */}
+        {isHubUserProp === false && !isBannerDismissed && (
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/30 px-3 py-4 flex items-center justify-between gap-4 bg-background">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <UserPlus className="h-5 w-5 text-primary" />
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toast.info("Feature coming soon", {
-                      description: "This feature will be available soon.",
-                      duration: 3000,
-                    });
-                    setIsBannerDismissed(true);
-                  }}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs md:text-sm whitespace-nowrap"
-                >
-                  Create
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleBannerToggle();
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
-                >
-                  {isBannerCollapsed ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronUp className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent
-          className="absolute top-120 left-1/2 transform -translate-x-1/2 max-w-[90vw] sm:max-w-[500px] p-0 overflow-hidden rounded-2xl gap-0 z-55"
-          onInteractOutside={(e) => {
-            // Prevent closing if clicking on the banner
-            if (
-              bannerRef.current &&
-              bannerRef.current.contains(e.target as Node)
-            ) {
-              e.preventDefault();
-            }
-          }}
-        >
-          {/* Header */}
-          <div className="p-6 pb-4 bg-muted/30 border-b border-border/50">
-            <DialogTitle className="text-xl font-semibold">
-              Request Intro to {profile.name}
-            </DialogTitle>
-            <DialogDescription className="mt-1 text-sm text-muted-foreground">
-              Request an introduction. The message is pre-filled based on your
-              search context.
-            </DialogDescription>
-          </div>
-
-          <div className="p-6 space-y-6">
-            {/* Success State */}
-            {submitStatus === "success" ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in-95">
-                <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
-                  <CheckCircle2 className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  Request Sent!
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-sm md:text-base text-foreground">
+                  Onboard your Network
                 </h3>
-                <p className="text-muted-foreground mt-2 max-w-xs">
-                  {workspaceName || "The network owner"} has been notified and
-                  will facilitate the introduction.
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Connect your network
                 </p>
               </div>
-            ) : (
-              <form onSubmit={handleSend} className="space-y-6">
-                {/* LinkedIn URL Input - Only show if requester doesn't have LinkedIn */}
-                {!requesterHasLinkedIn && (
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="linkedin-url"
-                      className="block text-sm font-medium"
-                    >
-                      LinkedIn URL <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      id="linkedin-url"
-                      type="url"
-                      value={linkedinUrl}
-                      onChange={(e) => setLinkedinUrl(e.target.value)}
-                      className="bg-muted/30"
-                      placeholder="https://linkedin.com/in/yourname"
-                      disabled={isSubmitting}
-                      required
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Enter your LinkedIn profile URL
-                    </p>
-                  </div>
-                )}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.info("Feature coming soon", {
+                    description: "This feature will be available soon.",
+                    duration: 3000,
+                  });
+                  setIsBannerDismissed(true);
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs md:text-sm whitespace-nowrap"
+              >
+                Create
+              </Button>
+            </div>
+          </div>
+        )}
+        {/* Header */}
+        <div className="p-6 pb-4 bg-muted/30 border-b border-border/50 relative">
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+          <DialogTitle className="text-xl font-semibold">
+            Request Intro to {profile.name}
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-sm text-muted-foreground">
+            Request an introduction. The message is pre-filled based on your
+            search context.
+          </DialogDescription>
+        </div>
 
-                {/* Message Input */}
-                <div className="space-y-2 relative">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-medium"
-                    >
-                      Why do you want to connect?{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleAiDraft}
-                      disabled={isGeneratingAI || message.length > 10}
-                      className={cn(
-                        "h-7 text-xs gap-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/50 transition-all",
-                        isGeneratingAI && "animate-pulse"
-                      )}
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      {isGeneratingAI ? "Drafting..." : "Draft with AI"}
-                    </Button>
-                  </div>
-                  <Textarea
-                    ref={textareaRef}
-                    id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="min-h-[120px] resize-none bg-muted/30"
-                    placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
-                    disabled={isSubmitting || isGeneratingAI}
+        <div className="p-6 space-y-6">
+          {/* Success State */}
+          {submitStatus === "success" ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in-95">
+              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground">
+                Request Sent!
+              </h3>
+              <p className="text-muted-foreground mt-2 max-w-xs">
+                {workspaceName || "The network owner"} has been notified and
+                will facilitate the introduction.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSend} className="space-y-6">
+              {/* LinkedIn URL Input - Only show if requester doesn't have LinkedIn */}
+              {!requesterHasLinkedIn && (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="linkedin-url"
+                    className="block text-sm font-medium"
+                  >
+                    LinkedIn URL <span className="text-red-500">*</span>image.png
+                  </label>
+                  <Input
+                    id="linkedin-url"
+                    type="url"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    className="bg-muted/30"
+                    placeholder="https://linkedin.com/in/yourname"
+                    disabled={isSubmitting}
                     required
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Minimum 10 characters • {message.length} characters
+                    Enter your LinkedIn profile URL
                   </p>
                 </div>
+              )}
 
-                {/* Error State */}
-                {submitStatus === "error" && errorMessage && (
-                  <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                    <AlertCircle className="h-4 w-4" />
-                    {errorMessage}
-                  </div>
-                )}
-
-                {/* Footer */}
-                <div className="flex gap-3 pt-2">
+              {/* Message Input */}
+              <div className="space-y-2 relative">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium"
+                  >
+                    Why do you want to connect?{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
                   <Button
                     type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={onClose}
-                    disabled={isSubmitting}
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAiDraft}
+                    disabled={isGeneratingAI || message.length > 10}
+                    className={cn(
+                      "h-7 text-xs gap-1.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/50 transition-all",
+                      isGeneratingAI && "animate-pulse"
+                    )}
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-primary hover:bg-primary/90"
-                    disabled={
-                      isSubmitting ||
-                      (!requesterHasLinkedIn && !linkedinUrl.trim()) ||
-                      message.trim().length < 10
-                    }
-                  >
-                    {isSubmitting ? "Sending..." : "Send Request"}
+                    <Sparkles className="h-3 w-3" />
+                    {isGeneratingAI ? "Drafting..." : "Draft with AI"}
                   </Button>
                 </div>
-              </form>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+                <Textarea
+                  ref={textareaRef}
+                  id="message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="min-h-[120px] resize-none bg-muted/30"
+                  placeholder="Explain your reason for wanting an introduction. Be specific about what you hope to learn or discuss..."
+                  disabled={isSubmitting || isGeneratingAI}
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Minimum 10 characters • {message.length} characters
+                </p>
+              </div>
+
+              {/* Error State */}
+              {submitStatus === "error" && errorMessage && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                  <AlertCircle className="h-4 w-4" />
+                  {errorMessage}
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                  disabled={
+                    isSubmitting ||
+                    (!requesterHasLinkedIn && !linkedinUrl.trim()) ||
+                    message.trim().length < 10
+                  }
+                >
+                  {isSubmitting ? "Sending..." : "Send Request"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
