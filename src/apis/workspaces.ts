@@ -4,8 +4,7 @@
  */
 
 // API Base URL - Next.js uses NEXT_PUBLIC_ prefix
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 
 import type { WorkspaceInfo } from "@/types";
 
@@ -62,3 +61,33 @@ export async function fetchWorkspaces(
   return workspaces;
 }
 
+/**
+ * Get workspace owner information (public API, no auth required)
+ * @param workspaceId The workspace ID (e.g., "suwalka")
+ * @returns Workspace owner information
+ */
+export async function fetchWorkspaceOwner(workspaceId: string): Promise<{
+  workspace_id: string;
+  owner_name: string;
+  owner_picture_url: string;
+  success: boolean;
+  message: string | null;
+}> {
+  const response = await fetch(
+    `${API_BASE}/api/workspace/${workspaceId}/owner`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail?.message || "Failed to fetch workspace owner");
+  }
+
+  const data = await response.json();
+  return data;
+}
