@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RequestData } from "./request-card";
 import { toast } from "sonner";
 import { Send, RotateCcw } from "lucide-react";
@@ -19,7 +20,7 @@ interface ReviewSendModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: RequestData | null;
-  onSend: (id: string, note: string, context: string) => void;
+  onSend: (id: string, note: string, context: string, shareMagicLink: boolean) => void;
 }
 
 export function ReviewSendModal({
@@ -30,6 +31,7 @@ export function ReviewSendModal({
 }: ReviewSendModalProps) {
   const [personalNote, setPersonalNote] = useState("");
   const [context, setContext] = useState("");
+  const [shareMagicLink, setShareMagicLink] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // Reset state when modal opens with a new request
@@ -44,6 +46,7 @@ export function ReviewSendModal({
       setPersonalNote(defaultNote);
 
       setContext(request.context);
+      setShareMagicLink(false);
       setIsSending(false);
     }
   }, [isOpen, request]);
@@ -73,7 +76,7 @@ export function ReviewSendModal({
 
     // Simulate API delay
     setTimeout(() => {
-      onSend(request.id, personalNote, context);
+      onSend(request.id, personalNote, context, shareMagicLink);
       setIsSending(false);
       onClose();
     }, 800);
@@ -133,6 +136,16 @@ export function ReviewSendModal({
                 className="min-h-[80px] bg-muted/20 text-muted-foreground text-sm italic resize-none"
               />
             </div>
+          </div>
+
+          {/* Share Magic Link Checkbox */}
+          <div className="space-y-2">
+            <Checkbox
+              id="shareMagicLink"
+              checked={shareMagicLink}
+              onCheckedChange={(checked) => setShareMagicLink(checked === true)}
+              label="Share your magic link with the requester"
+            />
           </div>
         </div>
 
