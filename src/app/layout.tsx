@@ -51,24 +51,29 @@ export default function RootLayout({
                 <LayoutContent>{children}</LayoutContent>
               </ChatProvider>
             </HubProvider>
-            <Toaster
-              position="bottom-right"
-              richColors
-              closeButton
-              toastOptions={{
-                duration: 4000,
-                classNames: {
-                  toast: "group toast",
-                  title: "group-[.toast]:text-sm group-[.toast]:font-medium",
-                  description: "group-[.toast]:text-xs",
-                  actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-                  cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-                },
-              }}
-            />
           </ThemeProvider>
         </ClerkProvider>
         </div>
+        <Toaster
+          position="bottom-right"
+          richColors
+          closeButton
+          className="!z-[999999]"
+          style={{ zIndex: 999999 }}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              zIndex: 999999,
+            },
+            classNames: {
+              toast: "group toast !z-[999999]",
+              title: "group-[.toast]:text-sm group-[.toast]:font-medium",
+              description: "group-[.toast]:text-xs",
+              actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+              cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            },
+          }}
+        />
       </body>
     </html>
   );

@@ -313,6 +313,20 @@
   }
 
   /* Toast Styling - Design System Consistent */
+  /* Force toast to appear above all modals and overlays */
+  body > [data-sonner-toaster],
+  [data-sonner-toaster],
+  [data-sonner-toaster] > div,
+  [data-sonner-toaster] > div > div {
+    z-index: 999999 !important;
+    position: fixed !important;
+  }
+
+  [data-sonner-toast],
+  [data-sonner-toast] * {
+    z-index: 999999 !important;
+  }
+
   [data-sonner-toast] {
     background: hsl(var(--card)) !important;
     border: 1px solid hsl(var(--border) / 0.5) !important;
@@ -322,6 +336,13 @@
     border-radius: 0.5rem !important;
     padding: 1rem 1.25rem !important;
     font-family: var(--font-outfit), system-ui, -apple-system, sans-serif !important;
+    position: relative !important;
+  }
+
+  /* Ensure toast is above Radix UI Dialog overlays */
+  [data-radix-portal] ~ [data-sonner-toaster],
+  [data-sonner-toaster] {
+    z-index: 999999 !important;
   }
 
   [data-sonner-toast][data-type="success"] {

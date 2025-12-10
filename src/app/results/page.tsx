@@ -43,6 +43,7 @@ function ResultsPageContent() {
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
   const [requesterHasLinkedIn, setRequesterHasLinkedIn] =
     useState<boolean>(false);
+  const [isHubUser, setIsHubUser] = useState<boolean | null>(null);
 
   const thinkingMessages = [
     "Analyzing request...",
@@ -195,6 +196,12 @@ function ResultsPageContent() {
       // Store requester_has_linkedin from API response
       if (result.requester_has_linkedin !== undefined) {
         setRequesterHasLinkedIn(result.requester_has_linkedin);
+      }
+
+      // Store is_hub_user from API response
+      if (result.is_hub_user !== undefined) {
+        console.log("is_hub_user from API response:", result.is_hub_user);
+        setIsHubUser(result.is_hub_user);
       }
 
       if (connections.length === 0) {
@@ -374,6 +381,7 @@ function ResultsPageContent() {
             : undefined
         }
         requesterHasLinkedIn={requesterHasLinkedIn}
+        isHubUser={isHubUser}
       />
 
       <ProfileDetailModal
