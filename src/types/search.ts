@@ -48,6 +48,7 @@ export interface BackendQueryResponse {
   success: boolean;
   profiles: BackendPerson[];
   requester_has_linkedin?: boolean; // Whether the requester has a LinkedIn profile
+  is_hub_user?: boolean; // Whether the requester is a hub user
   metadata: {
     session_id: string;
     execution_time: number;
