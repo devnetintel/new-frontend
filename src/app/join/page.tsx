@@ -43,12 +43,15 @@ function JoinPageContent() {
               avatar: data.owner_picture_url || CONNECTORS["default"].avatar,
             });
           } else {
-            setConnector(CONNECTORS["default"]);
+            // If success is false, redirect to sign-in page
+            console.warn("Workspace owner fetch failed, redirecting to sign-in");
+            router.push("/sign-in");
           }
         })
         .catch((error) => {
           console.error("Failed to fetch workspace owner:", error);
-          setConnector(CONNECTORS["default"]);
+          // On error, also redirect to sign-in
+          router.push("/sign-in");
         })
         .finally(() => {
           setIsLoadingOwner(false);
@@ -56,7 +59,7 @@ function JoinPageContent() {
     } else {
       setConnector(CONNECTORS["default"]);
     }
-  }, [refCode]);
+  }, [refCode, router]);
 
   // Capture Referral for post-login processing
   useEffect(() => {
@@ -100,7 +103,7 @@ function JoinPageContent() {
       <div className={cn("glass-card", isAnimatingOut && "fade-out")}>
         {/* Overlapping Avatar */}
         {isLoadingOwner ? (
-          <div className="connector-avatar flex items-center justify-center bg-muted/20">
+          <div className="connector-avatar flex items-center justify-center bg-[#0F0F12]">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
