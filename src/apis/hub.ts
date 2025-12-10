@@ -203,12 +203,14 @@ export async function fetchHubRequestsHistory(
  * @param requestId - The request ID (numeric)
  * @param approvalToken - The approval token from the request
  * @param h1Note - Optional note from H1 to S2
+ * @param shareMagicLink - Whether H1 wants to share their magic link with S2
  */
 export async function approveHubRequest(
   token: string,
   requestId: number | string,
   approvalToken: string,
-  h1Note?: string
+  h1Note?: string,
+  shareMagicLink?: boolean
 ): Promise<{ success: boolean; message?: string }> {
   if (!token) {
     throw new Error("Authentication required. Please sign in.");
@@ -225,6 +227,7 @@ export async function approveHubRequest(
     },
     body: JSON.stringify({
       h1_note: h1Note || null,
+      share_magic_link: shareMagicLink || false,
     }),
   });
 

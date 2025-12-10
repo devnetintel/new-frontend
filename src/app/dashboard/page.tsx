@@ -313,7 +313,12 @@ export default function Dashboard() {
     }
   };
 
-  const handleSendIntro = async (id: string, note: string, context: string) => {
+  const handleSendIntro = async (
+    id: string,
+    note: string,
+    context: string,
+    shareMagicLink: boolean
+  ) => {
     const request = hubRequests.find((r) => r.id === id);
     if (!request || !request.approval_token) {
       toast.error("Unable to approve request. Missing approval token.");
@@ -339,7 +344,13 @@ export default function Dashboard() {
         }));
       }
 
-      await approveHubRequest(token, request.id, request.approval_token, note);
+      await approveHubRequest(
+        token,
+        request.id,
+        request.approval_token,
+        note,
+        shareMagicLink
+      );
 
       toast.success("Sent! You're awesome.", {
         description: "Intro email sent to target.",
