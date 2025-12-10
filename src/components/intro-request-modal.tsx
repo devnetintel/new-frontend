@@ -17,7 +17,14 @@ import { Input } from "@/components/ui/input";
 import type { Connection } from "@/types";
 import { submitIntroRequest } from "@/services";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle2, Sparkles, UserPlus, X } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  Sparkles,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface IntroRequestModalProps {
@@ -49,7 +56,9 @@ export function IntroRequestModal({
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [isBannerCollapsed, setIsBannerCollapsed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   // Reset state when modal opens or profile changes
   useEffect(() => {
@@ -60,8 +69,36 @@ export function IntroRequestModal({
       setErrorMessage("");
       setIsGeneratingAI(false);
       setIsBannerDismissed(false);
+      setIsBannerCollapsed(false);
     }
   }, [isOpen, profile]);
+
+  // Function to handle banner collapse with animation
+  const handleBannerCollapse = () => {
+    if (!bannerRef.current) return;
+
+    setIsBannerCollapsed(true);
+    const banner = bannerRef.current;
+
+    // Animate banner to hide (slide up and fade out)
+    banner.style.transition = "all 0.4s ease-in-out";
+    banner.style.height = `${banner.offsetHeight}px`;
+    banner.style.overflow = "hidden";
+
+    // Force reflow
+    banner.offsetHeight;
+
+    banner.style.height = "0";
+    banner.style.opacity = "0";
+    banner.style.paddingTop = "0";
+    banner.style.paddingBottom = "0";
+    banner.style.marginBottom = "0";
+
+    // After animation completes, dismiss the banner
+    setTimeout(() => {
+      setIsBannerDismissed(true);
+    }, 400);
+  };
 
   // isHubUser is now passed as a prop from the /ask API response
 
@@ -195,13 +232,16 @@ export function IntroRequestModal({
       <DialogContent className="max-w-[90vw] sm:max-w-[500px] p-0 overflow-hidden rounded-2xl gap-0 z-55 [&>button]:hidden">
         {/* Banner - Permanent part of dialog */}
         {isHubUserProp === false && !isBannerDismissed && (
-          <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/30 px-3 py-4 flex items-center justify-between gap-4 bg-background">
+          <div
+            ref={bannerRef}
+            className="bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/30 px-3 py-4 flex items-center justify-between gap-4 bg-background overflow-hidden"
+          >
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                 <UserPlus className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-sm md:text-base text-foreground">
+                <h3 className="font-semibold text-sm md:text-base text-foreground ">
                   Onboard your Network
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -223,6 +263,18 @@ export function IntroRequestModal({
                 className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs md:text-sm whitespace-nowrap"
               >
                 Create
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleBannerCollapse();
+                }}
+                className="h-8 px-2 text-xs md:text-sm whitespace-nowrap text-muted-foreground hover:text-primary hover:bg-primary/10"
+              >
+                <ChevronDown className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -269,7 +321,7 @@ export function IntroRequestModal({
                     htmlFor="linkedin-url"
                     className="block text-sm font-medium"
                   >
-                    LinkedIn URL <span className="text-red-500">*</span>image.png
+                    LinkedIn URL <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="linkedin-url"
