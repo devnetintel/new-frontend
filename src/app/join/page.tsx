@@ -5,17 +5,10 @@ import { useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchWorkspaceOwner } from "@/apis/workspaces";
 
-// Mock Data for Connectors
+// Mock Data for Connectors (fallback)
 const CONNECTORS: Record<string, { name: string; avatar: string }> = {
-  shubham_s: {
-    name: "Shubham Rai",
-    avatar: "https://github.com/shadcn.png", // Placeholder, replace with real asset if available
-  },
-  ajay_s: {
-    name: "Ajay Suwalka",
-    avatar: "https://github.com/shadcn.png",
-  },
   default: {
     name: "The Connector",
     avatar: "https://github.com/shadcn.png",
@@ -30,10 +23,40 @@ function JoinPageContent() {
 
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [connector, setConnector] = useState<{ name: string; avatar: string }>(
+    CONNECTORS["default"]
+  );
+  const [isLoadingOwner, setIsLoadingOwner] = useState(false);
 
   // Get Connector Data
   const refCode = searchParams.get("ref") || "default";
-  const connector = CONNECTORS[refCode] || CONNECTORS["default"];
+
+  // Fetch workspace owner info when ref is provided
+  useEffect(() => {
+    if (refCode && refCode !== "default") {
+      setIsLoadingOwner(true);
+      fetchWorkspaceOwner(refCode)
+        .then((data) => {
+          if (data.success && data.owner_name) {
+            setConnector({
+              name: data.owner_name,
+              avatar: data.owner_picture_url || CONNECTORS["default"].avatar,
+            });
+          } else {
+            setConnector(CONNECTORS["default"]);
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch workspace owner:", error);
+          setConnector(CONNECTORS["default"]);
+        })
+        .finally(() => {
+          setIsLoadingOwner(false);
+        });
+    } else {
+      setConnector(CONNECTORS["default"]);
+    }
+  }, [refCode]);
 
   // Capture Referral for post-login processing
   useEffect(() => {
@@ -76,11 +99,17 @@ function JoinPageContent() {
       {/* Glass Card */}
       <div className={cn("glass-card", isAnimatingOut && "fade-out")}>
         {/* Overlapping Avatar */}
-        <img
-          src={connector.avatar}
-          alt={connector.name}
-          className="connector-avatar"
-        />
+        {isLoadingOwner ? (
+          <div className="connector-avatar flex items-center justify-center bg-muted/20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <img
+            src={connector.avatar}
+            alt={connector.name}
+            className="connector-avatar"
+          />
+        )}
 
         {/* Content */}
         <div className="space-y-8">
