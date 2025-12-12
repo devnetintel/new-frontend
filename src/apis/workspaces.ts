@@ -11,11 +11,11 @@ import type { WorkspaceInfo } from "@/types";
 /**
  * Get all workspaces the user has access to
  * @param token JWT authentication token from Clerk
- * @returns Array of workspaces with metadata
+ * @returns Object with workspaces array and total count
  */
 export async function fetchWorkspaces(
   token: string | null
-): Promise<WorkspaceInfo[]> {
+): Promise<{ workspaces: WorkspaceInfo[]; total: number }> {
   if (!token) {
     throw new Error("Authentication required. Please sign in.");
   }
@@ -37,8 +37,12 @@ export async function fetchWorkspaces(
 
   const data = await response.json();
 
+  // Check if workspaces array is empty or total is 0
+  const workspacesArray = data.workspaces || [];
+  const total = data.total ?? workspacesArray.length;
+
   // Map backend workspace_id to frontend id field
-  const workspaces: WorkspaceInfo[] = (data.workspaces || []).map(
+  const workspaces: WorkspaceInfo[] = workspacesArray.map(
     (ws: {
       workspace_id: string;
       name?: string;
@@ -58,7 +62,7 @@ export async function fetchWorkspaces(
     })
   );
 
-  return workspaces;
+  return { workspaces, total };
 }
 
 /**
