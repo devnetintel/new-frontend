@@ -69,6 +69,8 @@ export function transformPersonToConnection(
     workspace_id: person.workspace_id,
     picture_url: person.picture_url,
     s1_message: person.s1_message,
+    result_id: person.result_id,
+    search_result_id: person.search_result_id,
   };
 }
 

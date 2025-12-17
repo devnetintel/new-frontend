@@ -42,6 +42,9 @@ export async function submitIntroRequest(
       workspace_id: payload.workspace_id,
       urgency: payload.urgency || "medium", // Default to medium if not provided
       requester_linkedin_url: payload.requester_linkedin_url || "",
+      result_id: payload.result_id,
+      search_result_id: payload.search_result_id,
+      user_query: payload.user_query,
     }),
   });
 

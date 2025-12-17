@@ -51,6 +51,9 @@ export interface SubmitIntroRequestPayload {
   workspace_id: string;
   urgency?: string; // Optional, defaults to "medium" on backend
   requester_linkedin_url: string; // User's LinkedIn URL
+  result_id?: number; // Result ID from search
+  search_result_id?: number; // Search result ID
+  user_query?: string; // Original search query
 }
 
 /**

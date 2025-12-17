@@ -17,6 +17,7 @@ import {
 } from "@/services";
 import { toast } from "sonner";
 import { MobileBottomMenu } from "@/components/mobile-bottom-menu";
+import { useUserContext } from "@/contexts/user-context";
 
 function ResultsPageContent() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -41,9 +42,8 @@ function ResultsPageContent() {
   const [isClarifying, setIsClarifying] = useState(false);
   const [clarifyingOptions, setClarifyingOptions] = useState<string[]>([]);
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
-  const [requesterHasLinkedIn, setRequesterHasLinkedIn] =
-    useState<boolean>(false);
   const [isHubUser, setIsHubUser] = useState<boolean | null>(null);
+  const { requesterHasLinkedIn, setRequesterHasLinkedIn } = useUserContext();
 
   const thinkingMessages = [
     "Analyzing request...",
@@ -380,8 +380,8 @@ function ResultsPageContent() {
             ? workspaces.find((w) => w.id === workspaceIds[0])?.name
             : undefined
         }
-        requesterHasLinkedIn={requesterHasLinkedIn}
         isHubUser={isHubUser}
+        originalQuery={originalQuery || query}
       />
 
       <ProfileDetailModal

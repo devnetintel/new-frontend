@@ -21,6 +21,8 @@ export interface Connection {
   workspace_id?: string; // Identifies which workspace this connection came from
   picture_url?: string; // URL for the profile picture
   s1_message?: string; // Pre-generated message for introduction request
+  result_id?: number; // Result ID from search
+  search_result_id?: number; // Search result ID
 }
 
 /**
