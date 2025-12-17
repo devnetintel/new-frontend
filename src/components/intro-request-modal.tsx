@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserContext } from "@/contexts/user-context";
 
 interface IntroRequestModalProps {
   isOpen: boolean;
@@ -33,8 +34,8 @@ interface IntroRequestModalProps {
   profile: Connection | null;
   workspaceId?: string; // Workspace ID from selected workspace
   workspaceName?: string; // Optional workspace name for display
-  requesterHasLinkedIn?: boolean; // Whether the requester has a LinkedIn profile
   isHubUser?: boolean | null; // Whether the requester is a hub user (from /ask API response)
+  originalQuery?: string; // Original search query
 }
 
 export function IntroRequestModal({
@@ -43,10 +44,11 @@ export function IntroRequestModal({
   profile,
   workspaceId,
   workspaceName,
-  requesterHasLinkedIn = false,
   isHubUser: isHubUserProp = null,
+  originalQuery,
 }: IntroRequestModalProps) {
   const { getToken } = useAuth();
+  const { requesterHasLinkedIn, setRequesterHasLinkedIn } = useUserContext();
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -191,11 +193,20 @@ export function IntroRequestModal({
         workspace_id: workspaceId,
         urgency: "medium", // Default urgency
         requester_linkedin_url: requesterHasLinkedIn ? "" : linkedinUrl.trim(),
+        result_id: profile.result_id,
+        search_result_id: profile.search_result_id,
+        user_query: originalQuery,
       });
 
       if (result.success) {
         setSubmitStatus("success");
         toast.success("Introduction request sent successfully!");
+
+        // Update user context if LinkedIn URL was provided
+        if (!requesterHasLinkedIn && linkedinUrl.trim()) {
+          setRequesterHasLinkedIn(true);
+        }
+
         // Close modal after 2 seconds
         setTimeout(() => {
           onClose();

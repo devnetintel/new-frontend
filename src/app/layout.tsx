@@ -9,6 +9,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { ChatProvider } from "@/contexts/chat-context";
+import { UserProvider } from "@/contexts/user-context";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
@@ -47,8 +48,10 @@ export default function RootLayout({
           >
             <HubProvider>
               <ChatProvider>
-                <SidebarWrapper />
-                <LayoutContent>{children}</LayoutContent>
+                <UserProvider>
+                  <SidebarWrapper />
+                  <LayoutContent>{children}</LayoutContent>
+                </UserProvider>
               </ChatProvider>
             </HubProvider>
           </ThemeProvider>
