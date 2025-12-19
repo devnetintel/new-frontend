@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { fetchHistoryDetail, type HistoryDetailResponse } from "@/apis/history";
@@ -15,6 +15,7 @@ import { fetchWorkspaces } from "@/apis/workspaces";
 import type { WorkspaceInfo } from "@/types/connection";
 import { MobileBottomMenu } from "@/components/mobile-bottom-menu";
 import { useUserContext } from "@/contexts/user-context";
+import { markResultViewed } from "@/apis/search";
 
 function HistoryDetailContent() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -33,6 +34,7 @@ function HistoryDetailContent() {
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
   const [selectedWorkspaceIds, setSelectedWorkspaceIds] = useState<string[]>([]);
   const [isHubUser, setIsHubUser] = useState<boolean | null>(null);
+  const viewedResultIds = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -87,6 +89,7 @@ function HistoryDetailContent() {
 
       // Transform the detailed results to Connection format
       const connections = transformHistoryProfilesToConnections(data.profiles);
+      console.log("HistoryDetail: Transformed connections with result_ids:", connections.map(c => ({ id: c.id, result_id: c.result_id })));
       setResults(connections);
     } catch (error) {
       console.error("Failed to load history detail:", error);
@@ -111,7 +114,38 @@ function HistoryDetailContent() {
     const index = results.findIndex((p) => p.id === profile.id);
     setDetailModalIndex(index);
     setIsDetailModalOpen(true);
+    // Note: Don't call handleViewResult here - ProfileCard already calls it on click
+    // and ProfileDetailModal will call it when modal opens if not already viewed
   };
+
+  const handleViewResult = useCallback(async (resultId: number) => {
+    // Prevent duplicate calls for the same result_id
+    const resultIdNum = Number(resultId);
+    if (viewedResultIds.current.has(resultIdNum)) {
+      return;
+    }
+
+    // Mark immediately to prevent race conditions
+    viewedResultIds.current.add(resultIdNum);
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        viewedResultIds.current.delete(resultIdNum);
+        return;
+      }
+      if (isNaN(resultIdNum)) {
+        viewedResultIds.current.delete(resultIdNum);
+        return;
+      }
+      
+      await markResultViewed(resultIdNum, token);
+    } catch (error) {
+      // Remove from set on error so it can be retried
+      viewedResultIds.current.delete(resultIdNum);
+      console.error("HistoryDetail: Failed to mark result as viewed:", error);
+    }
+  }, [getToken]);
 
   if (!isLoaded) {
     return (
@@ -178,6 +212,7 @@ function HistoryDetailContent() {
                   profile={profile}
                   onConnect={() => handleConnect(profile.id)}
                   onReadMore={handleReadMore}
+                  onViewResult={handleViewResult}
                 />
               ))}
             </div>
@@ -218,6 +253,7 @@ function HistoryDetailContent() {
             setIsModalOpen(true);
           }
         }}
+        onViewResult={handleViewResult}
       />
 
       {/* Mobile Bottom Menu */}
@@ -285,7 +321,7 @@ function transformHistoryProfilesToConnections(
       workspace_id: undefined, // History API doesn't provide workspace_id
       picture_url: profile.picture_url || undefined,
       s1_message: undefined, // History API doesn't provide s1_message
-      result_id: item.result_id,
+      result_id: item.result_id ?? item.search_result_id, // Use result_id, fallback to search_result_id
       search_result_id: item.search_result_id,
     };
   });

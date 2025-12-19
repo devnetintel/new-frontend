@@ -15,6 +15,7 @@ import {
   fetchWorkspaces,
   WorkspaceInfo,
 } from "@/services";
+import { markResultViewed } from "@/apis/search";
 import { toast } from "sonner";
 import { MobileBottomMenu } from "@/components/mobile-bottom-menu";
 import { useUserContext } from "@/contexts/user-context";
@@ -44,6 +45,7 @@ function ResultsPageContent() {
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
   const [isHubUser, setIsHubUser] = useState<boolean | null>(null);
   const { requesterHasLinkedIn, setRequesterHasLinkedIn } = useUserContext();
+  const viewedResultIds = useRef<Set<number>>(new Set());
 
   const thinkingMessages = [
     "Analyzing request...",
@@ -261,6 +263,26 @@ function ResultsPageContent() {
     }
   };
 
+  const handleViewResult = async (resultId: number) => {
+    // Prevent duplicate calls for the same result_id
+    if (viewedResultIds.current.has(resultId)) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      if (token) {
+        // Mark as being processed to prevent duplicate calls
+        viewedResultIds.current.add(resultId);
+        await markResultViewed(resultId, token);
+      }
+    } catch (error) {
+      // Remove from set on error so it can be retried
+      viewedResultIds.current.delete(resultId);
+      console.error("Failed to mark result as viewed:", error);
+    }
+  };
+
   const handleBackToHome = () => {
     router.push("/");
   };
@@ -351,6 +373,7 @@ function ResultsPageContent() {
                     setDetailModalIndex(index);
                     setIsDetailModalOpen(true);
                   }}
+                  onViewResult={handleViewResult}
                 />
               ))}
             </div>
@@ -397,6 +420,7 @@ function ResultsPageContent() {
             setIsModalOpen(true);
           }
         }}
+        onViewResult={handleViewResult}
       />
 
       {/* Mobile Bottom Menu */}

@@ -65,7 +65,34 @@ function HistoryPageContent() {
 
   const getTimeAgo = (timestamp: string) => {
     try {
-      const date = new Date(timestamp);
+      // Backend sends UTC timestamps without timezone indicator (e.g., "2025-12-19T11:30:46.585605")
+      // Parse as UTC by explicitly treating it as UTC
+      let date: Date;
+      
+      if (timestamp.endsWith('Z') || timestamp.includes('+') || timestamp.includes('-', 10)) {
+        // Has timezone indicator, parse as-is
+        date = new Date(timestamp);
+      } else {
+        // No timezone indicator - explicitly parse as UTC
+        // Append 'Z' to indicate UTC
+        date = new Date(timestamp + 'Z');
+      }
+      
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      // Show seconds if less than 1 minute
+      if (diffSecs < 1) return "just now";
+      if (diffSecs < 60) return `${diffSecs} second${diffSecs > 1 ? "s" : ""} ago`;
+      if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+      
+      // For longer periods, use formatDistanceToNow
       return formatDistanceToNow(date, { addSuffix: true });
     } catch {
       return "Unknown";
