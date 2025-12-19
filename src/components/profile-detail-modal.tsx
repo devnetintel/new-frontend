@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ interface ProfileDetailModalProps {
   profiles: Connection[]
   initialIndex: number
   onRequestIntro: (profileId: string) => void
+  onViewResult?: (resultId: number) => void
 }
 
 export function ProfileDetailModal({
@@ -26,6 +27,7 @@ export function ProfileDetailModal({
   profiles,
   initialIndex,
   onRequestIntro,
+  onViewResult,
 }: ProfileDetailModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
@@ -35,6 +37,9 @@ export function ProfileDetailModal({
       setCurrentIndex(initialIndex)
     }
   }, [isOpen, initialIndex])
+
+  // Note: We don't call onViewResult here because ProfileCard already calls it on click
+  // This prevents duplicate API calls
 
   // Keyboard navigation
   useEffect(() => {

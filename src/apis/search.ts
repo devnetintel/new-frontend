@@ -172,3 +172,47 @@ export async function getAgentInfo(): Promise<Record<string, unknown>> {
   const response = await fetch(`${API_BASE}/agent/info`);
   return response.json();
 }
+
+/**
+ * Mark a search result as viewed
+ * 
+ * @param resultId - The ID of the search result to mark as viewed
+ * @param token - JWT authentication token from Clerk
+ * @returns Response with success status and result_id
+ * 
+ * @example
+ * ```tsx
+ * const { getToken } = useAuth();
+ * const token = await getToken();
+ * await markResultViewed(129, token);
+ * ```
+ */
+export async function markResultViewed(
+  resultId: number,
+  token: string | null
+): Promise<{ success: boolean; result_id: number }> {
+  if (!token) {
+    throw new Error("Authentication required. Please sign in.");
+  }
+
+  const response = await fetch(`${API_BASE}/api/search-results/${resultId}/view`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Authentication failed. Please sign in again.");
+    }
+    if (response.status === 404) {
+      throw new Error("Search result not found");
+    }
+    throw new Error("Failed to mark result as viewed");
+  }
+
+  const data = await response.json();
+  return data;
+}
