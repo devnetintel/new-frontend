@@ -49,8 +49,8 @@ export default function RootLayout({
             <HubProvider>
               <ChatProvider>
                 <UserProvider>
-                  <SidebarWrapper />
-                  <LayoutContent>{children}</LayoutContent>
+                <SidebarWrapper />
+                <LayoutContent>{children}</LayoutContent>
                 </UserProvider>
               </ChatProvider>
             </HubProvider>

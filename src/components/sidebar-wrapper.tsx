@@ -23,6 +23,7 @@ export function SidebarWrapper() {
     "join",
     "results",
     "result",
+    "history",
     "home",
     "index",
     "",

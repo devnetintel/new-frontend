@@ -136,13 +136,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       if (!token) {
         throw new Error("No authentication token");
       }
-      // Read search values directly from state (not from dependencies)
-      // This prevents auto-refresh when search values change
+      
+      // Only include search parameters if both column and value are provided
+      // This ensures that when switching tables (where values are cleared),
+      // we don't send empty search parameters
+      const searchColumn = tableSearchColumn?.trim() || undefined;
+      const searchValue = tableSearchValue?.trim() || undefined;
+      
       const data = await fetchAdminTableData(token, selectedTable, {
         limit: tableLimit,
         offset: (tablePage - 1) * tableLimit,
-        searchColumn: tableSearchColumn || undefined,
-        searchValue: tableSearchValue || undefined,
+        searchColumn: searchColumn && searchValue ? searchColumn : undefined,
+        searchValue: searchColumn && searchValue ? searchValue : undefined,
         orderBy: tableOrderBy || undefined,
         orderDirection: tableOrderDirection,
       });
@@ -168,16 +173,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     tableOrderDirection,
   ]);
   
-  // Load table data when filters change (but not search column/value - those are manual)
+  // Reset table data when table changes - clear search filters first
   useEffect(() => {
     if (selectedTable) {
-      refreshTableData();
-    }
-  }, [selectedTable, tablePage, tableOrderBy, tableOrderDirection, refreshTableData]);
-  
-  // Reset table data when table changes
-  useEffect(() => {
-    if (selectedTable) {
+      // Clear all search filters when switching tables
       setTablePage(1);
       setTableSearchColumn("");
       setTableSearchValue("");
@@ -185,6 +184,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       setTableOrderDirection("ASC");
     }
   }, [selectedTable]);
+  
+  // Load table data when filters change (but not search column/value - those are manual)
+  // This runs after the reset, ensuring clean state
+  useEffect(() => {
+    if (selectedTable) {
+      refreshTableData();
+    }
+  }, [selectedTable, tablePage, tableOrderBy, tableOrderDirection, refreshTableData]);
   
   const value: AdminContextType = {
     logs,

@@ -52,6 +52,7 @@ export function NewAdminDashboard() {
     setTableSearchColumn,
     tableSearchValue,
     setTableSearchValue,
+    setTableOrderDirection,
   } = useAdmin();
 
   // Load initial data
@@ -75,6 +76,10 @@ export function NewAdminDashboard() {
 
   const handleTableSearch = () => {
     if (selectedTable) {
+      // Set order direction to DESC when searching (matches API format)
+      setTableOrderDirection("DESC");
+      // Reset to first page when searching
+      setTablePage(1);
       refreshTableData();
     }
   };
