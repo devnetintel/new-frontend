@@ -24,6 +24,9 @@ export * from "./intro-requests";
 // Admin APIs
 export * from "./admin";
 
+// History APIs
+export * from "./history";
+
 // Re-export types for convenience
 export type {
   Connection,

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LayoutDashboard } from "lucide-react";
+import { Home, LayoutDashboard, History } from "lucide-react";
 import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { UserMenu } from "@/components/user-menu";
 
@@ -11,16 +11,23 @@ export function MobileBottomMenu() {
   const router = useRouter();
 
   // Determine active index based on current path
+  // Check specific routes FIRST before generic patterns
   const getActiveIndex = () => {
-    if (pathname === "/" || /^\/[a-zA-Z0-9_-]+$/.test(pathname)) {
-      return 0; // Home
-    } else if (
+    // Check specific routes first
+    if (
       pathname === "/dashboard" ||
       pathname.startsWith("/dashboard/")
     ) {
       return 1; // Dashboard
+    } else if (
+      pathname === "/history" ||
+      pathname.startsWith("/history/")
+    ) {
+      return 2; // History
     } else if (pathname === "/results" || pathname.startsWith("/results")) {
       return 0; // Results page - treat as Home
+    } else if (pathname === "/" || /^\/[a-zA-Z0-9_-]+$/.test(pathname)) {
+      return 0; // Home or workspace routes
     }
     return -1; // None active (for profile)
   };
@@ -69,6 +76,22 @@ export function MobileBottomMenu() {
           className={`mobile-menu__text ${activeIndex === 1 ? "active" : ""}`}
         >
           Dashboard
+        </strong>
+      </button>
+
+      {/* History Button */}
+      <button
+        className={`mobile-menu__item ${activeIndex === 2 ? "active" : ""}`}
+        onClick={() => handleItemClick(2, () => router.push("/history"))}
+        style={{ "--lineWidth": "0px" } as React.CSSProperties}
+      >
+        <div className="mobile-menu__icon">
+          <History className="icon" />
+        </div>
+        <strong
+          className={`mobile-menu__text ${activeIndex === 2 ? "active" : ""}`}
+        >
+          History
         </strong>
       </button>
 

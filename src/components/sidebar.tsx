@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Library, PlusCircle } from "lucide-react";
+import { Home, LayoutDashboard, PlusCircle, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,8 @@ export function Sidebar() {
 
   const navItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: Library, label: "Library", href: "/dashboard" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+    { icon: History, label: "History", href: "/history" },
   ];
 
   return (
@@ -39,11 +40,27 @@ export function Sidebar() {
         </Button>
 
         {navItems.map((item) => {
-          // For home route, check if pathname is "/" or a workspace route (e.g., /suwalka)
-          const isActive =
-            item.href === "/"
-              ? pathname === "/" || /^\/[a-zA-Z0-9_-]+$/.test(pathname)
-              : pathname === item.href || pathname.startsWith(item.href + "/");
+          // Check specific routes first before generic patterns
+          let isActive = false;
+          
+          if (item.href === "/dashboard") {
+            // Dashboard route
+            isActive = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+          } else if (item.href === "/history") {
+            // History route
+            isActive = pathname === "/history" || pathname.startsWith("/history/");
+          } else if (item.href === "/") {
+            // Home route - check if it's "/" or a workspace route, but NOT dashboard/history/results
+            const isDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+            const isHistory = pathname === "/history" || pathname.startsWith("/history/");
+            const isResults = pathname === "/results" || pathname.startsWith("/results");
+            
+            isActive = (pathname === "/" || /^\/[a-zA-Z0-9_-]+$/.test(pathname)) 
+              && !isDashboard && !isHistory && !isResults;
+          } else {
+            // Fallback for other routes
+            isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          }
 
           return (
             <Link key={item.href} href={item.href}>

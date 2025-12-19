@@ -16,6 +16,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
     pathname?.startsWith("/status/");
   const isResultsPage = pathname === "/results" || pathname?.startsWith("/results");
   const isDashboardPage = pathname === "/dashboard" || pathname?.startsWith("/dashboard/");
+  const isHistoryPage = pathname === "/history" || pathname?.startsWith("/history/");
   const isJoinPage = pathname === "/join";
   
   // Check if it's a workspace referral route (e.g., /suwalka)
@@ -32,6 +33,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
     "join",
     "results",
     "result",
+    "history",
     "home",
     "index",
     "",
@@ -56,8 +58,8 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
         <div className="w-full min-w-0">{children}</div>
       </main>
       {/* Mobile Bottom Menu - Only show on authenticated, non-public routes, and when chat is not open */}
-      {/* Exclude dashboard and results pages as they render their own menu */}
-      {!isAuthPage && !isAdminPage && !isPublicRoute && !isChatOpen && !isResultsPage && !isDashboardPage && !isJoinPage && !isWorkspaceRoute && (
+      {/* Exclude dashboard, results, and history pages as they render their own menu */}
+      {!isAuthPage && !isAdminPage && !isPublicRoute && !isChatOpen && !isResultsPage && !isDashboardPage && !isHistoryPage && !isJoinPage && !isWorkspaceRoute && (
         <MobileBottomMenu />
       )}
     </>
