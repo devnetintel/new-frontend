@@ -84,14 +84,6 @@ function HomePageContent() {
         const { workspaces: userWorkspaces, total } = await fetchWorkspaces(token);
         setWorkspaces(userWorkspaces);
 
-        // Show toast if no workspaces are available (check both array length and total)
-        if (userWorkspaces.length === 0 || total === 0) {
-          toast.info("No networks available", {
-            description: "Ask someone for a referral link to get started and access their network.",
-            duration: 8000,
-          });
-        }
-
         // Auto-select all workspaces by default
         if (userWorkspaces.length > 0) {
           setSelectedWorkspaceIds(userWorkspaces.map((w) => w.id));
