@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSignIn, useUser } from "@clerk/nextjs";
+import { useSignUp, useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter, useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,13 +16,16 @@ const CONNECTORS: Record<string, { name: string; avatar: string }> = {
 };
 
 function WorkspaceReferralPageContent() {
-  const { isLoaded, signIn } = useSignIn();
+  const { isLoaded: isSignUpLoaded, signUp } = useSignUp();
+  const { isLoaded: isSignInLoaded, signIn } = useSignIn();
+  const isLoaded = isSignUpLoaded && isSignInLoaded;
   const { isSignedIn } = useUser();
   const router = useRouter();
   const params = useParams();
 
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<"signup" | "signin">("signup");
   const [connector, setConnector] = useState<{ name: string; avatar: string }>(
     CONNECTORS["default"]
   );
@@ -82,11 +85,19 @@ function WorkspaceReferralPageContent() {
     setIsLoading(true);
 
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
+      if (mode === "signup") {
+        await signUp.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete: "/",
+        });
+      } else {
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete: "/",
+        });
+      }
     } catch (err) {
       console.error("OAuth error:", err);
       setIsLoading(false);
@@ -139,7 +150,12 @@ function WorkspaceReferralPageContent() {
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full bg-white text-black font-medium rounded-xl py-3 px-6 hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+            className={cn(
+              "w-full m-0 font-medium rounded-xl py-3 px-6 transition-colors flex items-center justify-center gap-2",
+              mode === "signup"
+                ? "bg-white text-black hover:bg-zinc-200"
+                : "bg-zinc-700 text-white hover:bg-zinc-800"
+            )}
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -163,10 +179,40 @@ function WorkspaceReferralPageContent() {
                     fill="#EA4335"
                   />
                 </svg>
-                Unlock Access with Google
+                {mode === "signup" 
+                  ? "Unlock Access with Google Sign Up"
+                  : "Unlock Access with Google Login"
+                }
               </>
             )}
           </button>
+          
+          {/* Toggle between Sign Up and Sign In */}
+          <div className="text-center mt-3">
+            <p className="text-sm text-zinc-400">
+              {mode === "signup" ? (
+                <>
+                  Have an account?{" "}
+                  <button
+                    onClick={() => setMode("signin")}
+                    className="text-white hover:text-zinc-200 underline font-medium"
+                  >
+                    Sign In
+                  </button>
+                </>
+              ) : (
+                <>
+                  No account?{" "}
+                  <button
+                    onClick={() => setMode("signup")}
+                    className="text-white hover:text-zinc-200 underline font-medium"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
         </div>
       </div>
     </div>
