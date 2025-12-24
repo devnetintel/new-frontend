@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/nextjs";
 import { sendChatMessage } from "@/apis/chat";
 import { transcribeAudio } from "@/apis/transcribe";
+import { logTelemetryEvent } from "@/apis/telemetry";
 import { SearchInput } from "@/components/search-input";
 import { ShinyText } from "@/components/shiny-text";
 import { useChat } from "@/contexts/chat-context";
@@ -71,6 +72,7 @@ export function VoiceDiscoveryInline({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const recordingStartTimeRef = useRef<number | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Timer for recording duration
@@ -109,6 +111,39 @@ export function VoiceDiscoveryInline({
       document.body.style.width = "";
     };
   }, [isActive]);
+
+  // Auto-focus the query edit field when refined query page appears
+  useEffect(() => {
+    if (conversationStep >= 3 && queryEditRef.current) {
+      const focusElement = () => {
+        if (queryEditRef.current) {
+          queryEditRef.current.focus();
+          
+          // Move cursor to the end of the content
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(queryEditRef.current);
+          range.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      };
+
+      // Try immediate focus
+      focusElement();
+      
+      // Also try after animation duration
+      const timeoutId1 = setTimeout(focusElement, 100);
+      const timeoutId2 = setTimeout(focusElement, 300);
+      const timeoutId3 = setTimeout(focusElement, 600);
+      
+      return () => {
+        clearTimeout(timeoutId1);
+        clearTimeout(timeoutId2);
+        clearTimeout(timeoutId3);
+      };
+    }
+  }, [conversationStep]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -232,6 +267,26 @@ export function VoiceDiscoveryInline({
           streamRef.current = null;
         }
 
+        // Calculate duration and send telemetry event
+        if (recordingStartTimeRef.current) {
+          const durationMs = Date.now() - recordingStartTimeRef.current;
+          recordingStartTimeRef.current = null;
+          
+          // Send voice_usage telemetry event
+          try {
+            const token = await getToken();
+            await logTelemetryEvent(
+              "voice_usage",
+              { duration_ms: durationMs },
+              token,
+              sessionId
+            );
+          } catch (error) {
+            // Silently fail - don't interrupt user experience
+            console.error("Failed to log voice_usage event:", error);
+          }
+        }
+
         // Transcribe audio
         if (audioChunksRef.current.length > 0) {
           const audioBlob = new Blob(audioChunksRef.current, {
@@ -244,6 +299,7 @@ export function VoiceDiscoveryInline({
       };
 
       mediaRecorder.start();
+      recordingStartTimeRef.current = Date.now();
       setIsListening(true);
     } catch (error) {
       console.error("Error starting recording:", error);
@@ -600,22 +656,22 @@ export function VoiceDiscoveryInline({
                         <div className="relative bg-card border-2 border-primary/30 rounded-xl p-8">
                           <Sparkles className="h-6 w-6 text-primary mb-4" />
 
-                          <div
-                            ref={queryEditRef}
-                            contentEditable
-                            suppressContentEditableWarning
-                            onFocus={() => setIsEditingQuery(true)}
-                            onBlur={() => {
-                              handleInlineBlur();
-                              setIsEditingQuery(false);
-                            }}
-                            className={cn(
-                              "text-xl leading-relaxed font-medium mb-8 outline-none cursor-text",
+                            <div
+                              ref={queryEditRef}
+                              contentEditable
+                              suppressContentEditableWarning
+                              onFocus={() => setIsEditingQuery(true)}
+                              onBlur={() => {
+                                handleInlineBlur();
+                                setIsEditingQuery(false);
+                              }}
+                              className={cn(
+                                "text-xl leading-relaxed font-medium mb-8 outline-none cursor-text",
                               "hover:border-b-2 hover:border-primary/30 pb-2",
                               isEditingQuery && "border-b-2 border-primary/50"
-                            )}
-                          >
-                            "{editedQuery || refinedQuery}"
+                              )}
+                            >
+                            {editedQuery || refinedQuery}
                           </div>
 
                           <div className="flex gap-3">
@@ -795,22 +851,22 @@ export function VoiceDiscoveryInline({
                     <Sparkles className="h-6 w-6 text-primary mb-4" />
 
                     {/* Always Editable Query */}
-                    <div
-                      ref={queryEditRef}
-                      contentEditable
-                      suppressContentEditableWarning
-                      onFocus={() => setIsEditingQuery(true)}
-                      onBlur={() => {
-                        handleInlineBlur();
-                        setIsEditingQuery(false);
-                      }}
-                      className={cn(
-                        "text-xl leading-relaxed font-medium mb-8 outline-none cursor-text",
+                      <div
+                        ref={queryEditRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={() => setIsEditingQuery(true)}
+                        onBlur={() => {
+                          handleInlineBlur();
+                          setIsEditingQuery(false);
+                        }}
+                        className={cn(
+                          "text-xl leading-relaxed font-medium mb-8 outline-none cursor-text",
                         "hover:border-b-2 hover:border-primary/30 pb-2",
                         isEditingQuery && "border-b-2 border-primary/50"
-                      )}
-                    >
-                      "{editedQuery || refinedQuery}"
+                        )}
+                        >
+                      {editedQuery || refinedQuery}
                     </div>
 
                     <div className="flex gap-3">

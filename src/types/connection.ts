@@ -23,6 +23,11 @@ export interface Connection {
   s1_message?: string; // Pre-generated message for introduction request
   result_id?: number; // Result ID from search
   search_result_id?: number; // Search result ID
+  // Intro request status fields (from backend)
+  is_intro_requested?: boolean;
+  intro_status?: 'pending' | 'connected' | 'declined' | null;
+  intro_request_id?: number | null;
+  intro_requested_at?: string | null;
 }
 
 /**

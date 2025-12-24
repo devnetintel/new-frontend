@@ -27,25 +27,30 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserContext } from "@/contexts/user-context";
+import { logTelemetryEvent } from "@/apis/telemetry";
 
 interface IntroRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: (profileId: string) => void; // Callback when request is successfully sent
   profile: Connection | null;
   workspaceId?: string; // Workspace ID from selected workspace
   workspaceName?: string; // Optional workspace name for display
   isHubUser?: boolean | null; // Whether the requester is a hub user (from /ask API response)
   originalQuery?: string; // Original search query
+  searchId?: string; // Optional search session ID from metadata.session_id
 }
 
 export function IntroRequestModal({
   isOpen,
   onClose,
+  onSuccess,
   profile,
   workspaceId,
   workspaceName,
   isHubUser: isHubUserProp = null,
   originalQuery,
+  searchId,
 }: IntroRequestModalProps) {
   const { getToken } = useAuth();
   const { requesterHasLinkedIn, setRequesterHasLinkedIn } = useUserContext();
@@ -109,6 +114,26 @@ export function IntroRequestModal({
 
     setIsGeneratingAI(true);
     setMessage(""); // Clear existing
+
+    // Send ai_draft telemetry event
+    try {
+      const token = await getToken();
+      const resultId = profile.result_id ?? profile.search_result_id;
+      if (resultId != null) {
+        await logTelemetryEvent(
+          "ai_draft",
+          {
+            person_id: profile.id, // profile.id is person_id
+            result_id: resultId,
+          },
+          token,
+          searchId
+        );
+      }
+    } catch (error) {
+      // Silently fail - don't interrupt user experience
+      console.error("Failed to log ai_draft event:", error);
+    }
 
     // Use s1_message from API if available, otherwise generate a default
     const draftText =
@@ -205,6 +230,11 @@ export function IntroRequestModal({
         // Update user context if LinkedIn URL was provided
         if (!requesterHasLinkedIn && linkedinUrl.trim()) {
           setRequesterHasLinkedIn(true);
+        }
+
+        // Notify parent of successful request
+        if (onSuccess && profile) {
+          onSuccess(profile.id);
         }
 
         // Close modal after 2 seconds

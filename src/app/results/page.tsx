@@ -46,6 +46,7 @@ function ResultsPageContent() {
   const [isHubUser, setIsHubUser] = useState<boolean | null>(null);
   const { requesterHasLinkedIn, setRequesterHasLinkedIn } = useUserContext();
   const viewedResultIds = useRef<Set<number>>(new Set());
+  const [sentRequestIds, setSentRequestIds] = useState<Set<string>>(new Set());
 
   const thinkingMessages = [
     "Analyzing request...",
@@ -374,6 +375,8 @@ function ResultsPageContent() {
                     setIsDetailModalOpen(true);
                   }}
                   onViewResult={handleViewResult}
+                  searchId={sessionId}
+                  sentRequestIds={sentRequestIds}
                 />
               ))}
             </div>
@@ -390,6 +393,15 @@ function ResultsPageContent() {
       <IntroRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onSuccess={(profileId) => {
+          const sentRequests = JSON.parse(localStorage.getItem('sentIntroRequests') || '[]');
+          if (!sentRequests.includes(profileId)) {
+            sentRequests.push(profileId);
+            localStorage.setItem('sentIntroRequests', JSON.stringify(sentRequests));
+          }
+          // Update state to trigger immediate UI update
+          setSentRequestIds(prev => new Set(prev).add(profileId));
+        }}
         profile={selectedProfile}
         workspaceId={
           selectedProfile?.workspace_id ||
@@ -405,6 +417,7 @@ function ResultsPageContent() {
         }
         isHubUser={isHubUser}
         originalQuery={originalQuery || query}
+        searchId={sessionId}
       />
 
       <ProfileDetailModal
@@ -421,6 +434,7 @@ function ResultsPageContent() {
           }
         }}
         onViewResult={handleViewResult}
+        sentRequestIds={sentRequestIds}
       />
 
       {/* Mobile Bottom Menu */}

@@ -35,6 +35,7 @@ function HistoryDetailContent() {
   const [selectedWorkspaceIds, setSelectedWorkspaceIds] = useState<string[]>([]);
   const [isHubUser, setIsHubUser] = useState<boolean | null>(null);
   const viewedResultIds = useRef<Set<number>>(new Set());
+  const [sentRequestIds, setSentRequestIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -198,6 +199,19 @@ function HistoryDetailContent() {
           </div>
         </div>
 
+        {/* Original Query - if different from displayed query */}
+        {historyDetail.metadata?.filters?.original_query && 
+         historyDetail.metadata.filters.original_query !== historyDetail.metadata?.query_text && (
+          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Original Query
+            </p>
+            <p className="text-base font-medium text-foreground">
+              {historyDetail.metadata.filters.original_query}
+            </p>
+          </div>
+        )}
+
         {/* Results */}
         <div className="space-y-6">
           {results.length === 0 ? (
@@ -213,6 +227,8 @@ function HistoryDetailContent() {
                   onConnect={() => handleConnect(profile.id)}
                   onReadMore={handleReadMore}
                   onViewResult={handleViewResult}
+                  searchId={searchId}
+                  sentRequestIds={sentRequestIds}
                 />
               ))}
             </div>
@@ -224,6 +240,15 @@ function HistoryDetailContent() {
       <IntroRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onSuccess={(profileId) => {
+          const sentRequests = JSON.parse(localStorage.getItem('sentIntroRequests') || '[]');
+          if (!sentRequests.includes(profileId)) {
+            sentRequests.push(profileId);
+            localStorage.setItem('sentIntroRequests', JSON.stringify(sentRequests));
+          }
+          // Update state to trigger immediate UI update
+          setSentRequestIds(prev => new Set(prev).add(profileId));
+        }}
         profile={selectedProfile}
         workspaceId={
           selectedProfile?.workspace_id ||
@@ -237,6 +262,7 @@ function HistoryDetailContent() {
               : undefined
         }
         isHubUser={isHubUser || false}
+        searchId={searchId}
       />
 
       {/* Profile Detail Modal */}
@@ -254,6 +280,8 @@ function HistoryDetailContent() {
           }
         }}
         onViewResult={handleViewResult}
+        searchId={searchId}
+        sentRequestIds={sentRequestIds}
       />
 
       {/* Mobile Bottom Menu */}
@@ -318,11 +346,16 @@ function transformHistoryProfilesToConnections(
       location: undefined, // History API doesn't provide location
       linkedin: profile.linkedin_profile || undefined,
       reason: item.overall_assessment, // Use overall_assessment as reason
-      workspace_id: undefined, // History API doesn't provide workspace_id
+      workspace_id: profile.workspace_id, // Use workspace_id from API response
       picture_url: profile.picture_url || undefined,
       s1_message: undefined, // History API doesn't provide s1_message
       result_id: item.result_id ?? item.search_result_id, // Use result_id, fallback to search_result_id
       search_result_id: item.search_result_id,
+      // Intro request status from backend
+      is_intro_requested: profile.is_intro_requested,
+      intro_status: profile.intro_status,
+      intro_request_id: profile.intro_request_id,
+      intro_requested_at: profile.intro_requested_at,
     };
   });
 }
