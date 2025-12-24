@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Mic, AudioLines } from "lucide-react";
+import { ArrowRight, Mic } from "lucide-react";
 import { ShinyText } from "@/components/shiny-text";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useAuth } from "@clerk/nextjs";
 import { transcribeAudio } from "@/apis/transcribe";
 import { NetworkFilter } from "@/components/network-filter";
 import type { WorkspaceInfo } from "@/types";
+import { logTelemetryEvent } from "@/apis/telemetry";
 
 interface SearchInputProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -51,13 +52,13 @@ export function SearchInput({
   const value = isControlled ? controlledValue : internalValue;
   const [isRecording, setIsRecording] = React.useState(false);
   const [isTranscribing, setIsTranscribing] = React.useState(false);
-  const [showTooltip, setShowTooltip] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   const streamRef = React.useRef<MediaStream | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const originalScrollPositionRef = React.useRef<number | null>(null);
+  const recordingStartTimeRef = React.useRef<number | null>(null);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -208,6 +209,26 @@ export function SearchInput({
           streamRef.current = null;
         }
 
+        // Calculate duration and send telemetry event
+        if (recordingStartTimeRef.current) {
+          const durationMs = Date.now() - recordingStartTimeRef.current;
+          recordingStartTimeRef.current = null;
+          
+          // Send voice_usage telemetry event
+          try {
+            const token = await getToken();
+            await logTelemetryEvent(
+              "voice_usage",
+              { duration_ms: durationMs },
+              token,
+              sessionId
+            );
+          } catch (error) {
+            // Silently fail - don't interrupt user experience
+            console.error("Failed to log voice_usage event:", error);
+          }
+        }
+
         if (audioChunksRef.current.length > 0) {
           const audioBlob = new Blob(audioChunksRef.current, {
             type: mimeType || "audio/webm",
@@ -219,6 +240,7 @@ export function SearchInput({
       };
 
       mediaRecorder.start();
+      recordingStartTimeRef.current = Date.now();
       setIsRecording(true);
     } catch (error) {
       console.error("Error starting recording:", error);
@@ -239,6 +261,7 @@ export function SearchInput({
       mediaRecorderRef.current.stop();
     }
     setIsRecording(false);
+    // Note: Duration tracking happens in onstop handler
   }, []);
 
   // Cleanup on unmount
@@ -344,33 +367,11 @@ export function SearchInput({
                 className="text-xs mr-1.5"
               />
             )}
-            {/* Voice conversation icon - Coming soon */}
-            <div className="relative">
-              <Button
-                size="icon"
-                className="h-10 w-10 rounded-full bg-white/50 text-black/50 hover:bg-white/50 border-2 border-border/30 dark:border-transparent transition-all duration-200 cursor-not-allowed opacity-60"
-                disabled={true}
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                <AudioLines className="h-5 w-5" />
-              </Button>
-              {showTooltip && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 dark:bg-gray-800 rounded-md shadow-lg whitespace-nowrap z-50 pointer-events-none">
-                  Coming soon
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
-                </div>
-              )}
-            </div>
-            {/* Mic button - always visible unless recording */}
+            {/* Mic button - prominent and eye-catching */}
             {isRecording ? (
               <Button
                 size="icon"
-                className="h-10 w-10 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-200"
+                className="h-10 w-10 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-200 shadow-lg"
                 onClick={stopRecording}
               >
                 <div className="h-3 w-3 rounded-full bg-white animate-pulse" />
@@ -378,8 +379,7 @@ export function SearchInput({
             ) : (
               <Button
                 size="icon"
-                variant="ghost"
-                className="h-10 w-10 rounded-full text-muted-foreground hover:bg-muted"
+                className="h-10 w-10 rounded-full bg-primary/90 text-primary-foreground hover:bg-primary shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                 onClick={startRecording}
                 disabled={isThinking || isTranscribing}
               >
@@ -400,7 +400,7 @@ export function SearchInput({
                 disabled={isThinking || isTranscribing}
               >
                 Find People
-                <ArrowRight className="ml-2 h-4 w-4" />
+
               </Button>
             ) : (
               <Button

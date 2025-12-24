@@ -27,6 +27,9 @@ export * from "./admin";
 // History APIs
 export * from "./history";
 
+// Onboarding APIs
+export * from "./onboarding";
+
 // Re-export types for convenience
 export type {
   Connection,
@@ -47,3 +50,6 @@ export type {
 
 // Re-export transcription types
 export type { TranscriptionResponse } from "./transcribe";
+
+// Onboarding types
+export type { OnboardingSubmitResponse } from "./onboarding";

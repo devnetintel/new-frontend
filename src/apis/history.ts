@@ -30,6 +30,11 @@ export interface HistoryDetailResponse {
       current_company: string | null;
       current_title: string | null;
       linkedin_profile: string | null;
+      workspace_id?: string;
+      is_intro_requested?: boolean;
+      intro_status?: 'pending' | 'connected' | 'declined' | null;
+      intro_request_id?: number | null;
+      intro_requested_at?: string | null;
     };
     result_id: number;
     search_result_id: number;
