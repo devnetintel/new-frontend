@@ -44,6 +44,7 @@ import type { BackendPerson, BackendQueryResponse } from "@/types";
  * @param token - JWT authentication token from Clerk
  * @param workspaceIds - Array of workspace identifiers for multi-workspace search
  * @param sessionId - Optional session ID from /chat endpoint to link chat conversation with search
+ * @param queryEdited - Optional flag to indicate if the query was manually edited by the user (default: false)
  * @returns Query response with results and metadata
  *
  * @example
@@ -54,7 +55,8 @@ import type { BackendPerson, BackendQueryResponse } from "@/types";
  *   "Python developers in fintech",
  *   token,
  *   ["shubham", "ajay"],
- *   "session-id-from-chat"
+ *   "session-id-from-chat",
+ *   true // query was edited
  * );
  * ```
  */
@@ -62,7 +64,8 @@ export async function searchNetwork(
   query: string,
   token: string | null,
   workspaceIds: string[],
-  sessionId?: string
+  sessionId?: string,
+  queryEdited?: boolean
 ): Promise<BackendQueryResponse> {
   // Wake up server on first request (for Render free tier)
   if (!serverAwake) {
@@ -71,12 +74,13 @@ export async function searchNetwork(
   }
 
   console.log("Sending search request to:", `${API_BASE}/ask`);
-  console.log("Request info:", { hasToken: !!token, workspaceIds, sessionId });
+  console.log("Request info:", { hasToken: !!token, workspaceIds, sessionId, queryEdited });
   
   const requestBody: {
     question: string;
     workspace_ids: string[];
     session_id?: string;
+    query_edited?: boolean;
   } = {
     question: query,
     workspace_ids: workspaceIds,
@@ -84,6 +88,10 @@ export async function searchNetwork(
 
   if (sessionId) {
     requestBody.session_id = sessionId;
+  }
+
+  if (queryEdited !== undefined) {
+    requestBody.query_edited = queryEdited;
   }
 
   console.log("Request body:", JSON.stringify(requestBody));

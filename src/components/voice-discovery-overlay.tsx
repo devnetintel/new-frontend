@@ -35,7 +35,7 @@ interface Message {
 interface VoiceDiscoveryInlineProps {
   isActive: boolean;
   onClose: () => void;
-  onSearch: (finalQuery: string, sessionId?: string) => void;
+  onSearch: (finalQuery: string, sessionId?: string, queryEdited?: boolean) => void;
   initialQuery?: string;
   selectedNetworks?: string[];
   workspaces?: WorkspaceInfo[];
@@ -225,7 +225,8 @@ export function VoiceDiscoveryInline({
 
   const handleFinalSearch = () => {
     const queryToSearch = editedQuery || refinedQuery;
-    onSearch(queryToSearch, sessionId);
+    const wasEdited = !!editedQuery; // User edited if editedQuery is set
+    onSearch(queryToSearch, sessionId, wasEdited);
     onClose();
   };
 

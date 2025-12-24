@@ -21,6 +21,7 @@ export interface AskRequest {
   workspace_ids?: string[];
   workspace_id?: string; // Deprecated, use workspace_ids
   session_id?: string; // Optional session ID from /chat
+  query_edited?: boolean; // Optional: true if query was edited by user (default: false)
 }
 
 /**

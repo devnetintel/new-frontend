@@ -192,7 +192,7 @@ function HomePageContent() {
     }
   }, [user?.id, getToken, isLoadingWorkspaces, isSignedIn]);
 
-  const handleSearch = async (searchQuery: string, sessionId?: string) => {
+  const handleSearch = async (searchQuery: string, sessionId?: string, queryEdited?: boolean) => {
     // Check if workspaces are selected
     if (selectedWorkspaceIds.length === 0) {
       toast.error("Please select at least one network to search");
@@ -207,6 +207,10 @@ function HomePageContent() {
 
     if (sessionId) {
       params.set("sessionId", sessionId);
+    }
+
+    if (queryEdited) {
+      params.set("queryEdited", "true");
     }
 
     router.push(`/results?${params.toString()}`);
@@ -312,10 +316,10 @@ function HomePageContent() {
             setIsVoiceDiscoveryOpen(false);
             setQuery("");
           }}
-          onSearch={(finalQuery, sessionId) => {
+          onSearch={(finalQuery: string, sessionId?: string, queryEdited?: boolean) => {
             setIsVoiceDiscoveryOpen(false);
             setQuery("");
-            handleSearch(finalQuery, sessionId);
+            handleSearch(finalQuery, sessionId, queryEdited);
           }}
           initialQuery={query}
           selectedNetworks={selectedWorkspaceIds}

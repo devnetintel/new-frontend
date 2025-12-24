@@ -66,6 +66,7 @@ function ResultsPageContent() {
     const queryParam = searchParams.get("q");
     const workspaceIdsParam = searchParams.get("workspaces");
     const sessionIdParam = searchParams.get("sessionId");
+    const queryEditedParam = searchParams.get("queryEdited");
 
     if (!queryParam) {
       router.push("/");
@@ -97,14 +98,16 @@ function ResultsPageContent() {
     performSearch(
       queryParam,
       workspaceIdsParam?.split(",") || [],
-      sessionIdParam || undefined
+      sessionIdParam || undefined,
+      queryEditedParam === 'true'
     );
   }, [isLoaded, isSignedIn, router, searchParams]);
 
   const performSearch = async (
     searchQuery: string,
     workspaceIdsArray: string[],
-    sessionIdParam?: string
+    sessionIdParam?: string,
+    queryEditedParam?: boolean
   ) => {
     setIsThinking(true);
     setResults([]);
@@ -144,7 +147,8 @@ function ResultsPageContent() {
           searchQuery,
           token,
           workspaceIdsArray,
-          sessionIdParam
+          sessionIdParam,
+          queryEditedParam
         );
       } catch (searchError) {
         // If we get a 401, check if user is still signed in and try again
@@ -167,7 +171,8 @@ function ResultsPageContent() {
             searchQuery,
             token,
             workspaceIdsArray,
-            sessionIdParam
+            sessionIdParam,
+            queryEditedParam
           );
         } else {
           throw searchError;
