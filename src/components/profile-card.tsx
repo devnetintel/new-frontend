@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { MapPin, Briefcase, UserPlus, Linkedin } from "lucide-react";
+import { MapPin, Briefcase, UserPlus, Linkedin, CheckCircle2, XCircle } from "lucide-react";
 import type { Connection } from "@/types";
+import { logTelemetryEvent } from "@/apis/telemetry";
+import { useAuth } from "@clerk/nextjs";
 
 interface ProfileCardProps {
   profile: Connection;
   onConnect: (id: string) => void;
   onReadMore?: (profile: Connection) => void;
   onViewResult?: (resultId: number) => void;
+  searchId?: string; // Optional search session ID from metadata.session_id
+  sentRequestIds?: Set<string>; // Set of profile IDs that have sent requests
 }
 
 // Shared ref across all ProfileCard instances to prevent duplicate calls
@@ -23,8 +27,12 @@ export function ProfileCard({
   onConnect,
   onReadMore,
   onViewResult,
+  searchId,
+  sentRequestIds,
 }: ProfileCardProps) {
+  const { getToken } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
   const initials = profile.name
     .split(" ")
     .map((n) => n[0])
@@ -35,7 +43,24 @@ export function ProfileCard({
   // Get workspace name or use default
   const workspaceName = profile.workspace_id || "Network";
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  // Check if request was already sent for this profile
+  useEffect(() => {
+    // Check backend field first (source of truth), fallback to sentRequestIds for optimistic updates
+    const isRequestSent = Boolean(profile.is_intro_requested) || sentRequestIds?.has(profile.id) || false;
+    setRequestSent(isRequestSent);
+  }, [profile.is_intro_requested, profile.id, sentRequestIds]);
+
+  // Function to mark request as sent
+  const markRequestAsSent = () => {
+    const sentRequests = JSON.parse(localStorage.getItem('sentIntroRequests') || '[]');
+    if (!sentRequests.includes(profile.id)) {
+      sentRequests.push(profile.id);
+      localStorage.setItem('sentIntroRequests', JSON.stringify(sentRequests));
+    }
+    setRequestSent(true);
+  };
+
+  const handleCardClick = async (e: React.MouseEvent) => {
     // Prevent event bubbling and default behavior
     e.stopPropagation();
     e.preventDefault();
@@ -58,13 +83,35 @@ export function ProfileCard({
     }
   };
 
-  const handleLinkedInClick = (e: React.MouseEvent) => {
+  const handleLinkedInClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Send linkedin_click telemetry event
+    try {
+      const token = await getToken();
+      const resultId = profile.result_id ?? profile.search_result_id;
+      if (profile.linkedin && resultId != null) {
+        await logTelemetryEvent(
+          "linkedin_click",
+          {
+            linkedin_profile: profile.linkedin,
+            person_id: profile.id, // profile.id is person_id
+            result_id: resultId,
+          },
+          token,
+          searchId
+        );
+      }
+    } catch (error) {
+      // Silently fail - don't interrupt user experience
+      console.error("Failed to log linkedin_click event:", error);
+    }
     // Link will navigate naturally
   };
 
-  const handleRequestIntroClick = (e: React.MouseEvent) => {
+  const handleRequestIntroClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
     onConnect(profile.id);
   };
 
@@ -174,11 +221,38 @@ export function ProfileCard({
       <CardFooter className="bg-muted/20 p-4 md:p-4 lg:p-4 flex justify-end">
         <Button
           size="default"
-          className="text-sm md:text-sm lg:text-sm px-6 md:px-6 lg:px-6 py-2 md:py-2 lg:py-2"
+          className={cn(
+            "text-sm md:text-sm lg:text-sm px-6 md:px-6 lg:px-6 py-2 md:py-2 lg:py-2",
+            requestSent && profile.intro_status === 'connected' && "bg-green-600 hover:bg-green-600 cursor-default",
+            requestSent && profile.intro_status === 'declined' && "bg-red-600 hover:bg-red-600 cursor-default",
+            requestSent && (!profile.intro_status || profile.intro_status === 'pending') && "bg-green-600 hover:bg-green-600 cursor-default"
+          )}
           onClick={handleRequestIntroClick}
+          disabled={requestSent}
         >
-          <UserPlus className="mr-2 h-4 w-4 md:h-4 md:w-4 lg:h-4 lg:w-4" />
-          Request Intro
+          {requestSent ? (
+            profile.intro_status === 'connected' ? (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4 md:h-4 md:w-4 lg:h-4 lg:w-4" />
+                Connected
+              </>
+            ) : profile.intro_status === 'declined' ? (
+              <>
+                <XCircle className="mr-2 h-4 w-4 md:h-4 md:w-4 lg:h-4 lg:w-4" />
+                Declined
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4 md:h-4 md:w-4 lg:h-4 lg:w-4" />
+                Request Sent
+              </>
+            )
+          ) : (
+            <>
+              <UserPlus className="mr-2 h-4 w-4 md:h-4 md:w-4 lg:h-4 lg:w-4" />
+              Request Intro
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

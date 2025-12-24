@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { CheckCircle2, XCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,8 @@ import { Button } from "@/components/ui/button"
 import { MapPin, Briefcase, Linkedin, UserPlus, ChevronLeft, ChevronRight, X } from "lucide-react"
 import type { Connection } from "@/types"
 import { cn } from "@/lib/utils"
+import { logTelemetryEvent } from "@/apis/telemetry"
+import { useAuth } from "@clerk/nextjs"
 
 interface ProfileDetailModalProps {
   isOpen: boolean
@@ -19,6 +22,8 @@ interface ProfileDetailModalProps {
   initialIndex: number
   onRequestIntro: (profileId: string) => void
   onViewResult?: (resultId: number) => void
+  searchId?: string; // Optional search session ID from metadata.session_id
+  sentRequestIds?: Set<string>; // Set of profile IDs that have sent requests
 }
 
 export function ProfileDetailModal({
@@ -28,18 +33,26 @@ export function ProfileDetailModal({
   initialIndex,
   onRequestIntro,
   onViewResult,
+  searchId,
+  sentRequestIds,
 }: ProfileDetailModalProps) {
+  const { getToken } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  const viewedResultIdsRef = useRef<Set<number>>(new Set());
+  const [requestSent, setRequestSent] = useState(false);
 
   // Update index when modal opens with new initialIndex
   useEffect(() => {
     if (isOpen) {
       setCurrentIndex(initialIndex)
+      // Check if current profile has sent request
+      const currentProfile = profiles[initialIndex];
+      if (currentProfile) {
+        const isRequestSent = Boolean(currentProfile.is_intro_requested) || sentRequestIds?.has(currentProfile.id) || false;
+        setRequestSent(isRequestSent);
+      }
     }
-  }, [isOpen, initialIndex])
-
-  // Note: We don't call onViewResult here because ProfileCard already calls it on click
-  // This prevents duplicate API calls
+  }, [isOpen, initialIndex, profiles, sentRequestIds])
 
   // Keyboard navigation
   useEffect(() => {
@@ -58,6 +71,15 @@ export function ProfileDetailModal({
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [isOpen, onClose, profiles.length])
+
+  // Check request status when navigating between profiles
+  useEffect(() => {
+    const currentProfile = profiles[currentIndex];
+    if (currentProfile) {
+      const isRequestSent = Boolean(currentProfile.is_intro_requested) || sentRequestIds?.has(currentProfile.id) || false;
+      setRequestSent(isRequestSent);
+    }
+  }, [currentIndex, profiles, sentRequestIds]);
 
   // All hooks must be called before any conditional returns
   const currentProfile = profiles[currentIndex]
@@ -81,7 +103,7 @@ export function ProfileDetailModal({
     setCurrentIndex((prev) => (prev < profiles.length - 1 ? prev + 1 : 0))
   }
 
-  const handleRequestIntro = () => {
+  const handleRequestIntro = async () => {
     onRequestIntro(currentProfile.id)
     onClose()
   }
@@ -208,11 +230,38 @@ export function ProfileDetailModal({
             {/* Request Intro Button */}
             <Button
               onClick={handleRequestIntro}
-              className="w-full font-medium py-3 md:py-2.5 lg:py-3 text-sm md:text-sm lg:text-base"
+              className={cn(
+                "w-full font-medium py-3 md:py-2.5 lg:py-3 text-sm md:text-sm lg:text-base",
+                requestSent && currentProfile.intro_status === 'connected' && "bg-green-600 hover:bg-green-600 cursor-default",
+                requestSent && currentProfile.intro_status === 'declined' && "bg-red-600 hover:bg-red-600 cursor-default",
+                requestSent && (!currentProfile.intro_status || currentProfile.intro_status === 'pending') && "bg-green-600 hover:bg-green-600 cursor-default"
+              )}
               size="default"
+              disabled={requestSent}
             >
-              <UserPlus className="mr-2 md:mr-1.5 h-4 w-4 md:h-4 md:w-4" />
-              Request Intro
+              {requestSent ? (
+                currentProfile.intro_status === 'connected' ? (
+                  <>
+                    <CheckCircle2 className="mr-2 md:mr-1.5 h-4 w-4 md:h-4 md:w-4" />
+                    Connected
+                  </>
+                ) : currentProfile.intro_status === 'declined' ? (
+                  <>
+                    <XCircle className="mr-2 md:mr-1.5 h-4 w-4 md:h-4 md:w-4" />
+                    Declined
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 md:mr-1.5 h-4 w-4 md:h-4 md:w-4" />
+                    Request Sent
+                  </>
+                )
+              ) : (
+                <>
+                  <UserPlus className="mr-2 md:mr-1.5 h-4 w-4 md:h-4 md:w-4" />
+                  Request Intro
+                </>
+              )}
             </Button>
           </div>
 
