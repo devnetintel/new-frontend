@@ -25,6 +25,7 @@ import { ImpactHeader } from "@/components/impact-header";
 import { RequestQueue } from "@/components/request-queue";
 import { ReviewSendModal } from "@/components/review-send-modal";
 import { RequestData } from "@/components/request-card";
+import { OnboardingUploadCard } from "@/components/onboarding-upload-card";
 import {
   fetchHubDashboard,
   fetchHubPendingRequests,
@@ -443,6 +444,16 @@ export default function Dashboard() {
             )}
           </section>
         )}
+
+        {/* Onboarding Section - Show for all users */}
+        <section className="rounded-xl md:rounded-2xl w-full box-border">
+          <OnboardingUploadCard
+            onSuccess={(workspaceId) => {
+              console.log('Workspace created:', workspaceId);
+              toast.success(`Workspace "${workspaceId}" created successfully!`);
+            }}
+          />
+        </section>
 
         {/* My Requests - Show for both hub and spoke users */}
         <section className="rounded-xl md:rounded-2xl bg-muted/30 p-3 md:p-6 border border-border/40 w-full box-border">
